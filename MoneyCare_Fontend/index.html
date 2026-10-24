@@ -1333,6 +1333,250 @@
       100% { background-position: -200% 0; }
     }
 
+    /* ==========================================================================
+       TOPBAR CONTROLS & DROPDOWNS (NOTIFICATIONS, PROFILE, SEARCH)
+       ========================================================================== */
+    .dropdown-container {
+      position: relative;
+    }
+
+    .topbar-search-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+      width: 260px;
+    }
+
+    .topbar-search-btn:hover {
+      border-color: var(--border-focus);
+      background-color: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .kbd-badge {
+      margin-left: auto;
+      font-size: 0.68rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-weight: 700;
+    }
+
+    .popover-dropdown {
+      position: absolute;
+      top: calc(100% + 12px);
+      right: 0;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.98);
+      transition: all var(--transition);
+    }
+
+    .popover-dropdown.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Notification Dropdown */
+    .notif-popover {
+      width: 380px;
+      max-height: 520px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .popover-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .popover-header h4 {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notif-item {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: background-color var(--transition);
+      position: relative;
+    }
+
+    .notif-item:hover {
+      background-color: var(--bg);
+    }
+
+    .notif-item.unread {
+      background-color: var(--primary-light);
+    }
+
+    .notif-item.unread::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 20px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--primary);
+    }
+
+    .notif-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .notif-content h5 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .notif-content p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .notif-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Profile Popover */
+    .profile-popover {
+      width: 290px;
+      padding: 12px;
+    }
+
+    .profile-popover-header {
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary-light), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .profile-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color var(--transition);
+    }
+
+    .profile-menu-item:hover {
+      background-color: var(--bg);
+      color: var(--primary);
+    }
+
+    .profile-menu-item i {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+    }
+
+    .profile-menu-item:hover i {
+      color: var(--primary);
+    }
+
+    /* Quick Amount Chips in Modal */
+    .quick-amount-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .quick-amt-chip {
+      padding: 5px 11px;
+      border-radius: var(--radius-full);
+      background-color: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .quick-amt-chip:hover {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Command Palette Modal */
+    .command-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background-color var(--transition);
+    }
+
+    .command-list-item:hover {
+      background-color: var(--bg);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spin {
+      animation: spin 0.8s linear infinite;
+    }
+
     /* Responsive Queries */
     @media (max-width: 1200px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -1379,38 +1623,38 @@
 
       <div class="sidebar-nav">
         <div class="nav-group-title">Nghiệp vụ chính</div>
-        <button class="nav-btn active" data-target="overview">
+        <button class="nav-btn active" data-target="overview" onclick="navigateTo('overview')">
           <i data-lucide="layout-dashboard"></i>
           <span>Tổng quan</span>
         </button>
-        <button class="nav-btn" data-target="transactions">
+        <button class="nav-btn" data-target="transactions" onclick="navigateTo('transactions')">
           <i data-lucide="arrow-left-right"></i>
           <span>Giao dịch</span>
         </button>
-        <button class="nav-btn" data-target="budget">
+        <button class="nav-btn" data-target="budget" onclick="navigateTo('budget')">
           <i data-lucide="pie-chart"></i>
           <span>Ngân sách</span>
         </button>
-        <button class="nav-btn" data-target="goals">
+        <button class="nav-btn" data-target="goals" onclick="navigateTo('goals')">
           <i data-lucide="target"></i>
           <span>Mục tiêu tiết kiệm</span>
         </button>
-        <button class="nav-btn" data-target="accounts">
+        <button class="nav-btn" data-target="accounts" onclick="navigateTo('accounts')">
           <i data-lucide="credit-card"></i>
           <span>Tài khoản ví</span>
         </button>
-        <button class="nav-btn" data-target="reports">
+        <button class="nav-btn" data-target="reports" onclick="navigateTo('reports')">
           <i data-lucide="bar-chart-3"></i>
           <span>Báo cáo & Phân tích</span>
         </button>
-        <button class="nav-btn" data-target="bills">
+        <button class="nav-btn" data-target="bills" onclick="navigateTo('bills')">
           <i data-lucide="receipt"></i>
           <span>Hóa đơn định kỳ</span>
           <span class="nav-badge-count" id="sidebarBillCount">1 sắp hạn</span>
         </button>
 
         <div class="nav-group-title">Hệ thống</div>
-        <button class="nav-btn" data-target="settings">
+        <button class="nav-btn" data-target="settings" onclick="navigateTo('settings')">
           <i data-lucide="settings"></i>
           <span>Cá nhân & Cài đặt</span>
         </button>
@@ -1442,36 +1686,89 @@
             <h1 id="screenHeaderTitle">Tổng quan tài chính</h1>
             <p id="screenHeaderSub">Chào bạn, cùng kiểm soát dòng tiền và đạt mục tiêu nhé!</p>
           </div>
+          <!-- Global Search Command Trigger -->
+          <div class="topbar-search-btn" id="topbarSearchTrigger" onclick="openCommandSearch()" title="Tìm kiếm nhanh (Ctrl + K)">
+            <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+            <span>Tìm giao dịch, hóa đơn...</span>
+            <kbd class="kbd-badge">Ctrl K</kbd>
+          </div>
         </div>
 
         <div class="topbar-right">
           <!-- Skeleton Loading Demo State Switcher -->
-          <button class="icon-btn" id="toggleSkeletonBtn" title="Bật/Tắt xem trạng thái Skeleton Loading" aria-label="Skeleton Loading Demo">
+          <button class="icon-btn" id="toggleSkeletonBtn" title="Xem thử hiệu ứng tải Skeleton Shimmer" aria-label="Skeleton Loading Demo">
             <i data-lucide="sparkles"></i>
           </button>
 
           <!-- Balance Eye Visibility Toggle -->
-          <button class="icon-btn" id="balanceEyeBtn" title="Ẩn/Hiện số dư" aria-label="Ẩn hiện số dư">
+          <button class="icon-btn" id="balanceEyeBtn" title="Ẩn/Hiện số dư tài chính (Ctrl + H)" aria-label="Ẩn hiện số dư">
             <i data-lucide="eye" id="eyeIcon"></i>
           </button>
 
-          <!-- Notification Bell -->
-          <button class="icon-btn" id="notifBellBtn" title="Thông báo" onclick="triggerToast('Bạn có 1 hóa đơn EVN sắp đến hạn vào ngày 28/10!')">
-            <i data-lucide="bell"></i>
-            <span class="notif-dot" id="headerNotifDot"></span>
-          </button>
+          <!-- Notification Dropdown Container -->
+          <div class="dropdown-container">
+            <button class="icon-btn" id="notifBellBtn" title="Trung tâm thông báo" onclick="toggleNotifDropdown(event)">
+              <i data-lucide="bell"></i>
+              <span class="notif-dot" id="headerNotifDot"></span>
+            </button>
+
+            <!-- Notifications Popover Menu -->
+            <div class="popover-dropdown notif-popover" id="notificationPopover">
+              <div class="popover-header">
+                <h4><i data-lucide="bell" style="width: 18px; height: 18px; color: var(--primary);"></i> Thông báo <span class="badge-pill badge-purple" id="unreadNotifCount">2 mới</span></h4>
+                <button class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.72rem;" onclick="markAllNotificationsAsRead()">Đã đọc hết</button>
+              </div>
+              <div style="overflow-y: auto; max-height: 360px;" id="notificationsList">
+                <div class="notif-item unread" onclick="navigateTo('bills'); closeAllDropdowns();">
+                  <div class="notif-icon-box" style="background: var(--warning-light); color: var(--warning);">
+                    <i data-lucide="zap"></i>
+                  </div>
+                  <div class="notif-content">
+                    <h5>Hóa đơn EVN sắp đến hạn!</h5>
+                    <p>Hóa đơn tiền điện 1.120.000 đ đến hạn ngày 28/10 (còn 4 ngày).</p>
+                    <div class="notif-time">10 phút trước • Chạm để thanh toán</div>
+                  </div>
+                </div>
+
+                <div class="notif-item unread" onclick="navigateTo('budget'); closeAllDropdowns();">
+                  <div class="notif-icon-box" style="background: var(--danger-light); color: var(--danger);">
+                    <i data-lucide="alert-triangle"></i>
+                  </div>
+                  <div class="notif-content">
+                    <h5>Cảnh báo ngân sách "Mua sắm"</h5>
+                    <p>Bạn đã sử dụng 97% hạn mức mua sắm của tháng 10.</p>
+                    <div class="notif-time">2 giờ trước • Chạm để xem chi tiết</div>
+                  </div>
+                </div>
+
+                <div class="notif-item" onclick="navigateTo('goals'); closeAllDropdowns();">
+                  <div class="notif-icon-box" style="background: var(--success-light); color: var(--success);">
+                    <i data-lucide="target"></i>
+                  </div>
+                  <div class="notif-content">
+                    <h5>Mục tiêu MacBook đã đạt 60%</h5>
+                    <p>Tuyệt vời! Bạn chỉ còn thiếu 20.000.000 đ để hoàn thành mục tiêu.</p>
+                    <div class="notif-time">Hôm qua</div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding: 10px; text-align: center; border-top: 1px solid var(--border); background-color: var(--bg);">
+                <button class="btn btn-outline btn-sm" style="width: 100%; justify-content: center;" onclick="clearAllNotifications()">Xóa tất cả thông báo</button>
+              </div>
+            </div>
+          </div>
 
           <!-- Theme Switcher (Light / Dark / System) -->
           <div class="theme-toggle-box">
-            <button class="theme-btn active" data-mode="light" title="Giao diện Sáng">
+            <button class="theme-btn active" data-mode="light" onclick="setTheme('light')" title="Giao diện Sáng">
               <i data-lucide="sun" style="width: 14px; height: 14px;"></i>
               <span>Sáng</span>
             </button>
-            <button class="theme-btn" data-mode="dark" title="Giao diện Tối">
+            <button class="theme-btn" data-mode="dark" onclick="setTheme('dark')" title="Giao diện Tối">
               <i data-lucide="moon" style="width: 14px; height: 14px;"></i>
               <span>Tối</span>
             </button>
-            <button class="theme-btn" data-mode="system" title="Theo hệ thống">
+            <button class="theme-btn" data-mode="system" onclick="setTheme('system')" title="Chế độ Tự động theo thiết bị">
               <i data-lucide="laptop" style="width: 14px; height: 14px;"></i>
               <span>Tự động</span>
             </button>
@@ -1483,10 +1780,49 @@
             <span>Thêm giao dịch</span>
           </button>
 
-          <!-- User Pill -->
-          <div class="user-pill" id="userPillBtn" onclick="navigateTo('settings')">
-            <div class="avatar-sm">MC</div>
-            <span class="user-name-text" id="topbarUserName">Minh Cường</span>
+          <!-- User Profile Dropdown Container -->
+          <div class="dropdown-container">
+            <div class="user-pill" id="userPillBtn" onclick="toggleProfileDropdown(event)">
+              <div class="avatar-sm">MC</div>
+              <span class="user-name-text" id="topbarUserName">Minh Cường</span>
+              <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            </div>
+
+            <!-- Profile Popover Menu -->
+            <div class="popover-dropdown profile-popover" id="userProfilePopover">
+              <div class="profile-popover-header">
+                <div class="avatar-sm" style="width: 44px; height: 44px; font-size: 1.1rem;">MC</div>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-primary);" id="popoverUserName">Minh Cường</div>
+                  <div style="font-size: 0.74rem; color: var(--text-secondary);">cuong.moneycare@fintech.vn</div>
+                  <span class="badge-pill badge-green" style="font-size: 0.68rem; margin-top: 3px;">Thành viên VIP Fintech</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <button class="profile-menu-item" onclick="navigateTo('settings'); switchSettingsTab(document.querySelector('[data-setting-tab=\'profile\']'), 'profile'); closeAllDropdowns();">
+                  <i data-lucide="user"></i>
+                  <span>Hồ sơ cá nhân</span>
+                </button>
+                <button class="profile-menu-item" onclick="navigateTo('accounts'); closeAllDropdowns();">
+                  <i data-lucide="credit-card"></i>
+                  <span>Tài khoản & Nguồn tiền (4 ví)</span>
+                </button>
+                <button class="profile-menu-item" onclick="navigateTo('settings'); switchSettingsTab(document.querySelector('[data-setting-tab=\'security\']'), 'security'); closeAllDropdowns();">
+                  <i data-lucide="lock"></i>
+                  <span>Bảo mật & Mã PIN 6 số</span>
+                </button>
+                <button class="profile-menu-item" onclick="navigateTo('settings'); switchSettingsTab(document.querySelector('[data-setting-tab=\'backup\']'), 'backup'); closeAllDropdowns();">
+                  <i data-lucide="hard-drive"></i>
+                  <span>Sao lưu dữ liệu JSON</span>
+                </button>
+                <div style="height: 1px; background-color: var(--border); margin: 6px 0;"></div>
+                <button class="profile-menu-item" style="color: var(--danger);" onclick="triggerToast('Đã đăng xuất phiên làm việc an toàn!', 'warn'); closeAllDropdowns();">
+                  <i data-lucide="log-out" style="color: var(--danger);"></i>
+                  <span>Đăng xuất tài khoản</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -2155,7 +2491,7 @@
   </div>
 
   <!-- ========================================================================
-       MODAL 1: THÊM GIAO DỊCH MỚI (QUICK ADD TRANSACTION)
+       MODAL 1: THÊM GIAO DỊCH MỚI (QUICK ADD TRANSACTION - MOMO STYLE)
        ======================================================================== -->
   <div class="modal-backdrop" id="modalAddTransaction">
     <div class="modal-box">
@@ -2164,28 +2500,41 @@
         <button class="modal-close-btn" onclick="closeAllModals()"><i data-lucide="x"></i></button>
       </div>
 
-      <!-- Type Switcher -->
-      <div class="type-switcher">
+      <!-- 3-Way Type Switcher (Chi tiêu / Thu nhập / Chuyển ví) -->
+      <div class="type-switcher" style="grid-template-columns: 1fr 1fr 1fr;">
         <button type="button" class="type-btn active exp" id="btnModalTypeExpense">
-          <i data-lucide="arrow-up-right"></i> Tiền chi tiêu
+          <i data-lucide="arrow-up-right"></i> Tiền chi
         </button>
         <button type="button" class="type-btn" id="btnModalTypeIncome">
-          <i data-lucide="arrow-down-left"></i> Tiền thu nhập
+          <i data-lucide="arrow-down-left"></i> Tiền thu
+        </button>
+        <button type="button" class="type-btn" id="btnModalTypeTransfer">
+          <i data-lucide="repeat"></i> Chuyển ví
         </button>
       </div>
 
       <form id="formAddTransaction">
-        <!-- Amount Input -->
+        <!-- Amount Input & Quick Chips -->
         <div class="form-group">
           <label class="form-label">Số tiền giao dịch</label>
           <div class="amount-box-input">
             <input type="text" id="inputModalAmount" placeholder="0" autofocus required>
             <span class="amount-currency">VND</span>
           </div>
+
+          <!-- MoMo-style Quick Amount Chips -->
+          <div class="quick-amount-chips">
+            <span class="quick-amt-chip" onclick="setQuickAmount(50000)">+50k</span>
+            <span class="quick-amt-chip" onclick="setQuickAmount(100000)">+100k</span>
+            <span class="quick-amt-chip" onclick="setQuickAmount(200000)">+200k</span>
+            <span class="quick-amt-chip" onclick="setQuickAmount(500000)">+500k</span>
+            <span class="quick-amt-chip" onclick="setQuickAmount(1000000)">+1 triệu</span>
+            <span class="quick-amt-chip" onclick="setQuickAmount(2000000)">+2 triệu</span>
+          </div>
         </div>
 
-        <!-- Category Picker -->
-        <div class="form-group">
+        <!-- Category Picker (Hidden when Transfer) -->
+        <div class="form-group" id="groupCategoryPicker">
           <label class="form-label">Danh mục tài chính</label>
           <div class="cat-selector-grid" id="categoryPickerGrid">
             <button type="button" class="cat-btn selected" data-cat="Ăn uống" data-icon="utensils">
@@ -2223,13 +2572,24 @@
           </div>
         </div>
 
-        <!-- Account Picker -->
+        <!-- Account Picker Source -->
         <div class="form-group">
-          <label class="form-label">Tài khoản thanh toán</label>
+          <label class="form-label" id="labelSourceAccount">Tài khoản thanh toán</label>
           <select class="form-control" id="selectModalAccount">
             <option value="Timo Digital">Timo Digital Bank (•••• 9821)</option>
             <option value="Ví MoMo">Ví MoMo Pay</option>
             <option value="Vietcombank">Vietcombank (•••• 5612)</option>
+            <option value="Tiền mặt">Tiền mặt tại ví</option>
+          </select>
+        </div>
+
+        <!-- Destination Account (Only for Transfer tab) -->
+        <div class="form-group" id="groupDestinationAccount" style="display: none;">
+          <label class="form-label">Chuyển sang tài khoản</label>
+          <select class="form-control" id="selectDestAccount">
+            <option value="Ví MoMo">Ví MoMo Pay (Số dư: 6.850.000 đ)</option>
+            <option value="Timo Digital">Timo Digital Bank (Số dư: 42.500.000 đ)</option>
+            <option value="Vietcombank">Vietcombank (Số dư: 95.000.000 đ)</option>
             <option value="Tiền mặt">Tiền mặt tại ví</option>
           </select>
         </div>
@@ -2246,10 +2606,40 @@
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 13px; margin-top: 10px;">
+        <!-- Quick Note Suggestion Chips -->
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">
+          <span class="quick-amt-chip" onclick="setQuickTag('Ăn trưa')">🍱 Cơm trưa</span>
+          <span class="quick-amt-chip" onclick="setQuickTag('Cà phê sáng')">☕ Cà phê</span>
+          <span class="quick-amt-chip" onclick="setQuickTag('Đổ xăng xe')">⛽ Xăng xe</span>
+          <span class="quick-amt-chip" onclick="setQuickTag('Đi siêu thị')">🛒 Siêu thị</span>
+          <span class="quick-amt-chip" onclick="setQuickTag('Shopee')">📦 Shopee</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnSubmitTx" style="width: 100%; justify-content: center; padding: 13px; margin-top: 6px;">
           Lưu khoản giao dịch
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: TÌM KIẾM TOÀN CỤC & LỆNH NHANH (GLOBAL COMMAND PALETTE - CTRL+K)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="modalCommandSearch">
+    <div class="modal-box" style="max-width: 600px; padding: 22px;">
+      <div style="display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--border); padding-bottom: 14px; margin-bottom: 16px;">
+        <i data-lucide="search" style="color: var(--primary); width: 22px; height: 22px;"></i>
+        <input type="text" id="globalCommandInput" placeholder="Tìm kiếm giao dịch, hóa đơn, hoặc gõ tên màn hình..." style="width: 100%; border: none; outline: none; background: transparent; font-size: 1.05rem; font-weight: 600; color: var(--text-primary);" oninput="handleCommandSearchInput(this.value)">
+        <button class="modal-close-btn" onclick="closeAllModals()"><i data-lucide="x"></i></button>
+      </div>
+
+      <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px;">
+        Lối tắt điều hướng nhanh
+      </div>
+
+      <div id="commandResultsList" style="display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto;">
+        <!-- Injected via JS -->
+      </div>
     </div>
   </div>
 
@@ -2483,22 +2873,22 @@
        MOBILE BOTTOM NAVIGATION BAR
        ======================================================================== -->
   <nav class="bottom-bar">
-    <button class="bottom-tab active" data-target="overview">
+    <button class="bottom-tab active" data-target="overview" onclick="navigateTo('overview')">
       <i data-lucide="layout-dashboard"></i>
       <span>Tổng quan</span>
     </button>
-    <button class="bottom-tab" data-target="transactions">
+    <button class="bottom-tab" data-target="transactions" onclick="navigateTo('transactions')">
       <i data-lucide="arrow-left-right"></i>
       <span>Giao dịch</span>
     </button>
-    <button class="bottom-tab fab-center" id="mobileCenterFabBtn" title="Thêm giao dịch">
+    <button class="bottom-tab fab-center" id="mobileCenterFabBtn" title="Thêm giao dịch" onclick="openAddModal()">
       <i data-lucide="plus" style="width: 26px; height: 26px;"></i>
     </button>
-    <button class="bottom-tab" data-target="reports">
+    <button class="bottom-tab" data-target="reports" onclick="navigateTo('reports')">
       <i data-lucide="pie-chart"></i>
       <span>Báo cáo</span>
     </button>
-    <button class="bottom-tab" data-target="settings">
+    <button class="bottom-tab" data-target="settings" onclick="navigateTo('settings')">
       <i data-lucide="user"></i>
       <span>Cá nhân</span>
     </button>
@@ -2570,40 +2960,75 @@
     ];
 
     /* --------------------------------------------------------------------------
-       THEME CONTROLLER (LIGHT / DARK / SYSTEM)
+       THEME CONTROLLER (LIGHT / DARK / SYSTEM AUTO)
        -------------------------------------------------------------------------- */
     const rootHtml = document.documentElement;
-    const themeButtons = document.querySelectorAll('.theme-btn');
 
-    function setTheme(mode) {
+    function setTheme(mode, isSilent = false) {
       if (mode === 'system') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         rootHtml.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        if (!isSilent) triggerToast(`Đã bật chế độ Tự động: Đang theo thiết bị (${prefersDark ? 'Tối' : 'Sáng'})`);
+      } else if (mode === 'dark') {
+        rootHtml.setAttribute('data-theme', 'dark');
+        if (!isSilent) triggerToast('Đã chuyển sang giao diện Tối (Dark Mode)');
       } else {
-        rootHtml.setAttribute('data-theme', mode);
+        rootHtml.setAttribute('data-theme', 'light');
+        if (!isSilent) triggerToast('Đã chuyển sang giao diện Sáng (Light Mode)');
       }
       localStorage.setItem('moneycare_theme', mode);
 
-      themeButtons.forEach(b => {
+      document.querySelectorAll('.theme-btn').forEach(b => {
         b.classList.toggle('active', b.getAttribute('data-mode') === mode);
       });
 
       refreshChartsTheme();
     }
 
-    const savedThemeMode = localStorage.getItem('moneycare_theme') || 'light';
-    setTheme(savedThemeMode);
-
-    themeButtons.forEach(btn => {
-      btn.addEventListener('click', () => setTheme(btn.getAttribute('data-mode')));
-    });
+    const savedThemeMode = localStorage.getItem('moneycare_theme') || 'system';
+    setTheme(savedThemeMode, true);
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
       if (localStorage.getItem('moneycare_theme') === 'system') {
         rootHtml.setAttribute('data-theme', e.matches ? 'dark' : 'light');
         refreshChartsTheme();
+        triggerToast(`Hệ thống thiết bị đổi sang chế độ ${e.matches ? 'Tối' : 'Sáng'}`);
       }
     });
+
+    /* --------------------------------------------------------------------------
+       FINANCIAL STATS ENGINE (IN-MEMORY REACTIVE STATE)
+       -------------------------------------------------------------------------- */
+    let financialStats = {
+      netWorth: 148520000,
+      income: 32500000,
+      expense: 14280000,
+      remaining: 18220000
+    };
+
+    function updateFinancialStatsUI() {
+      const netWorthEl = document.getElementById('totalNetWorthVal');
+      const incomeEl = document.getElementById('monthlyIncomeVal');
+      const expenseEl = document.getElementById('monthlyExpenseVal');
+      const remainingEl = document.getElementById('monthlyRemainingVal');
+
+      if (netWorthEl) {
+        netWorthEl.setAttribute('data-raw', financialStats.netWorth);
+        netWorthEl.innerText = isHiddenBalance ? '•••••••• đ' : formatVnd(financialStats.netWorth);
+      }
+      if (incomeEl) {
+        incomeEl.setAttribute('data-raw', financialStats.income);
+        incomeEl.innerText = isHiddenBalance ? '•••••••• đ' : formatVnd(financialStats.income);
+      }
+      if (expenseEl) {
+        expenseEl.setAttribute('data-raw', financialStats.expense);
+        expenseEl.innerText = isHiddenBalance ? '•••••••• đ' : formatVnd(financialStats.expense);
+      }
+      if (remainingEl) {
+        remainingEl.setAttribute('data-raw', financialStats.remaining);
+        remainingEl.innerText = isHiddenBalance ? '•••••••• đ' : formatVnd(financialStats.remaining);
+      }
+    }
 
     /* --------------------------------------------------------------------------
        SKELETON LOADING DEMO TOGGLE
@@ -2649,7 +3074,21 @@
         document.getElementById('screenHeaderSub').innerText = screenTitles[targetId].sub;
       }
 
-      document.getElementById('sidebar').classList.remove('open');
+      // Re-trigger layout for charts if entering overview or reports
+      if (targetId === 'reports') {
+        setTimeout(() => {
+          if (chartTrend) chartTrend.resize();
+          if (chartReportPie) chartReportPie.resize();
+        }, 60);
+      } else if (targetId === 'overview') {
+        setTimeout(() => {
+          if (chartCashflow) chartCashflow.resize();
+          if (chartCategory) chartCategory.resize();
+        }, 60);
+      }
+
+      const sidebarEl = document.getElementById('sidebar');
+      if (sidebarEl) sidebarEl.classList.remove('open');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -3007,6 +3446,215 @@
     }
 
     /* --------------------------------------------------------------------------
+       TOPBAR DROPDOWNS & COMMAND PALETTE CONTROLLERS
+       -------------------------------------------------------------------------- */
+    function closeAllDropdowns() {
+      document.querySelectorAll('.popover-dropdown').forEach(p => p.classList.remove('open'));
+    }
+
+    function toggleNotifDropdown(e) {
+      if (e) e.stopPropagation();
+      const popover = document.getElementById('notificationPopover');
+      const isAlreadyOpen = popover.classList.contains('open');
+      closeAllDropdowns();
+      if (!isAlreadyOpen) {
+        popover.classList.add('open');
+      }
+    }
+
+    function toggleProfileDropdown(e) {
+      if (e) e.stopPropagation();
+      const popover = document.getElementById('userProfilePopover');
+      const isAlreadyOpen = popover.classList.contains('open');
+      closeAllDropdowns();
+      if (!isAlreadyOpen) {
+        popover.classList.add('open');
+      }
+    }
+
+    // Dismiss dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown-container')) {
+        closeAllDropdowns();
+      }
+    });
+
+    function markAllNotificationsAsRead() {
+      document.querySelectorAll('.notif-item').forEach(item => item.classList.remove('unread'));
+      const dot = document.getElementById('headerNotifDot');
+      if (dot) dot.style.display = 'none';
+      const badge = document.getElementById('unreadNotifCount');
+      if (badge) {
+        badge.innerText = '0 mới';
+        badge.className = 'badge-pill badge-green';
+      }
+      triggerToast('Đã đánh dấu đọc tất cả thông báo!');
+    }
+
+    function clearAllNotifications() {
+      const container = document.getElementById('notificationsList');
+      if (container) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+            <i data-lucide="bell-off" style="width: 38px; height: 38px; margin-bottom: 8px;"></i>
+            <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-secondary);">Không có thông báo nào</div>
+            <p style="font-size: 0.75rem; margin-top: 2px;">Bạn đã xem hết tất cả thông báo</p>
+          </div>
+        `;
+        lucide.createIcons();
+      }
+      const dot = document.getElementById('headerNotifDot');
+      if (dot) dot.style.display = 'none';
+      const badge = document.getElementById('unreadNotifCount');
+      if (badge) badge.innerText = '0';
+      triggerToast('Đã dọn sạch trung tâm thông báo!');
+    }
+
+    /* --------------------------------------------------------------------------
+       GLOBAL COMMAND PALETTE (CTRL + K)
+       -------------------------------------------------------------------------- */
+    function openCommandSearch() {
+      closeAllModals();
+      closeAllDropdowns();
+      const modal = document.getElementById('modalCommandSearch');
+      modal.classList.add('open');
+      const input = document.getElementById('globalCommandInput');
+      input.value = '';
+      input.focus();
+      renderCommandResults('');
+    }
+
+    function renderCommandResults(query) {
+      const container = document.getElementById('commandResultsList');
+      if (!container) return;
+      const q = query.toLowerCase().trim();
+
+      const screens = [
+        { name: 'Tổng quan tài chính', screen: 'overview', icon: 'layout-dashboard', sub: 'Xem tài sản, dòng tiền và biểu đồ' },
+        { name: 'Lịch sử giao dịch', screen: 'transactions', icon: 'arrow-left-right', sub: 'Tìm kiếm, lọc và xuất dữ liệu thu chi' },
+        { name: 'Quản lý ngân sách', screen: 'budget', icon: 'pie-chart', sub: 'Xem định mức và hạn mức chi tiêu' },
+        { name: 'Mục tiêu & Hũ tiết kiệm', screen: 'goals', icon: 'target', sub: 'Tích lũy cho các mục tiêu tương lai' },
+        { name: 'Tài khoản & Ví thanh toán', screen: 'accounts', icon: 'credit-card', sub: 'Quản lý 4 thẻ ngân hàng và ví số' },
+        { name: 'Báo cáo & Phân tích chuyên sâu', screen: 'reports', icon: 'bar-chart-3', sub: 'Thống kê xu hướng tiêu dùng theo tuần' },
+        { name: 'Hóa đơn & Dịch vụ định kỳ', screen: 'bills', icon: 'receipt', sub: 'Theo dõi tiền điện EVN, Internet, Netflix' },
+        { name: 'Cá nhân & Cài đặt hệ thống', screen: 'settings', icon: 'settings', sub: 'Hồ sơ người dùng, bảo mật, sao lưu' }
+      ];
+
+      const filteredScreens = screens.filter(s => s.name.toLowerCase().includes(q) || s.sub.toLowerCase().includes(q));
+      const filteredTx = txList.filter(t => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)).slice(0, 4);
+
+      let html = '';
+
+      if (filteredScreens.length > 0) {
+        html += `<div style="font-size: 0.72rem; font-weight: 700; color: var(--primary); padding: 6px 10px;">ĐIỀU HƯỚNG MÀN HÌNH</div>`;
+        html += filteredScreens.map(s => `
+          <div class="command-list-item" onclick="navigateTo('${s.screen}'); closeAllModals();">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="${s.icon}" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div>
+                <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary);">${s.name}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${s.sub}</div>
+              </div>
+            </div>
+            <span class="badge-pill badge-purple" style="font-size: 0.7rem;">Mở</span>
+          </div>
+        `).join('');
+      }
+
+      if (filteredTx.length > 0 && q.length > 0) {
+        html += `<div style="font-size: 0.72rem; font-weight: 700; color: var(--warning); padding: 10px 10px 6px;">GIAO DỊCH KHỚP TỪ KHÓA</div>`;
+        html += filteredTx.map(t => `
+          <div class="command-list-item" onclick="openTxDetailModal(${t.id});">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: ${t.type === 'expense' ? 'var(--danger-light)' : 'var(--success-light)'}; color: ${t.type === 'expense' ? 'var(--danger)' : 'var(--success)'}; display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="${t.icon || 'credit-card'}" style="width: 16px; height: 16px;"></i>
+              </div>
+              <div>
+                <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary);">${t.title}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">${t.date} • ${t.category}</div>
+              </div>
+            </div>
+            <div style="font-weight: 700; font-size: 0.88rem; color: ${t.type === 'expense' ? 'var(--danger)' : 'var(--success)'};">${(t.type === 'expense' ? '-' : '+') + formatVnd(t.amount)}</div>
+          </div>
+        `).join('');
+      }
+
+      if (!html) {
+        html = `
+          <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+            <i data-lucide="search-x" style="width: 36px; height: 36px; margin-bottom: 6px;"></i>
+            <div style="font-weight: 600;">Không tìm thấy kết quả nào cho "${query}"</div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function handleCommandSearchInput(val) {
+      renderCommandResults(val);
+    }
+
+    // Keyboard shortcut handlers (Ctrl + K, Ctrl + H, Escape)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openCommandSearch();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        document.getElementById('balanceEyeBtn').click();
+      } else if (e.key === 'Escape') {
+        closeAllModals();
+        closeAllDropdowns();
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       QUICK AMOUNT & NOTE HELPERS IN ADD MODAL
+       -------------------------------------------------------------------------- */
+    function setQuickAmount(val) {
+      const input = document.getElementById('inputModalAmount');
+      let currentVal = parseInt(input.value.replace(/\D/g, '') || 0, 10);
+      currentVal += val;
+      input.value = currentVal.toLocaleString('vi-VN');
+    }
+
+    function setQuickTag(tag) {
+      const input = document.getElementById('inputModalNote');
+      input.value = tag;
+    }
+
+    // Wire up Transfer Tab in Add Transaction Modal
+    const btnTransfer = document.getElementById('btnModalTypeTransfer');
+    if (btnTransfer) {
+      btnTransfer.addEventListener('click', () => {
+        currentTransactionType = 'transfer';
+        document.querySelectorAll('.type-switcher .type-btn').forEach(b => b.className = 'type-btn');
+        btnTransfer.className = 'type-btn active exp';
+        btnTransfer.style.backgroundColor = 'var(--primary)';
+        btnTransfer.style.color = '#FFFFFF';
+        document.getElementById('groupCategoryPicker').style.display = 'none';
+        document.getElementById('groupDestinationAccount').style.display = 'block';
+        document.getElementById('labelSourceAccount').innerText = 'Trích từ tài khoản nguồn';
+      });
+
+      btnExp.addEventListener('click', () => {
+        document.getElementById('groupCategoryPicker').style.display = 'block';
+        document.getElementById('groupDestinationAccount').style.display = 'none';
+        document.getElementById('labelSourceAccount').innerText = 'Tài khoản thanh toán';
+      });
+
+      btnInc.addEventListener('click', () => {
+        document.getElementById('groupCategoryPicker').style.display = 'block';
+        document.getElementById('groupDestinationAccount').style.display = 'none';
+        document.getElementById('labelSourceAccount').innerText = 'Tài khoản thanh toán';
+      });
+    }
+
+    /* --------------------------------------------------------------------------
        MODAL CONTROLLERS & SUBMISSIONS
        -------------------------------------------------------------------------- */
     function closeAllModals() {
@@ -3061,38 +3709,84 @@
       e.target.value = raw ? parseInt(raw, 10).toLocaleString('vi-VN') : '';
     });
 
-    // Handle Form Add Transaction
+    // Handle Form Add Transaction (Fully reactive frontend state)
     document.getElementById('formAddTransaction').addEventListener('submit', e => {
       e.preventDefault();
       const raw = inputAmount.value.replace(/\D/g, '');
       if (!raw || parseInt(raw, 10) <= 0) {
-        triggerToast('Vui lòng nhập số tiền hợp lệ!', 'error');
+        triggerToast('Vui lòng nhập số tiền lớn hơn 0!', 'error');
+        inputAmount.focus();
         return;
       }
 
       const num = parseInt(raw, 10);
       const note = document.getElementById('inputModalNote').value.trim() || selectedCategory;
       const account = document.getElementById('selectModalAccount').value;
-      const date = document.getElementById('inputModalDate').value || '24/10/2026';
+      const destAccount = document.getElementById('selectDestAccount') ? document.getElementById('selectDestAccount').value : 'Ví MoMo';
+      const date = document.getElementById('inputModalDate').value || new Date().toISOString().split('T')[0];
+      const timeNow = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-      const newTx = {
-        id: Date.now(),
-        title: note,
-        category: selectedCategory,
-        icon: selectedCategoryIcon,
-        account: account,
-        amount: currentTransactionType === 'expense' ? -num : num,
-        date: date,
-        time: 'Vừa xong',
-        type: currentTransactionType
-      };
+      // Visual button feedback
+      const submitBtn = document.getElementById('btnSubmitTx');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i data-lucide="loader" class="spin" style="width: 16px; height: 16px;"></i> Đang ghi chép...`;
+      lucide.createIcons();
 
-      txList.unshift(newTx);
-      renderAllTransactions();
-      closeAllModals();
-      inputAmount.value = '';
-      document.getElementById('inputModalNote').value = '';
-      triggerToast(`Đã lưu giao dịch: ${formatVnd(num)}`);
+      setTimeout(() => {
+        let displayAmount = num;
+        let txType = currentTransactionType;
+
+        if (txType === 'expense') {
+          displayAmount = -num;
+          financialStats.expense += num;
+          financialStats.remaining -= num;
+          financialStats.netWorth -= num;
+          // Deduct from account
+          const acc = accountsList.find(a => a.name.includes(account) || account.includes(a.name));
+          if (acc) acc.balance = Math.max(0, acc.balance - num);
+        } else if (txType === 'income') {
+          displayAmount = num;
+          financialStats.income += num;
+          financialStats.remaining += num;
+          financialStats.netWorth += num;
+          // Add to account
+          const acc = accountsList.find(a => a.name.includes(account) || account.includes(a.name));
+          if (acc) acc.balance += num;
+        } else if (txType === 'transfer') {
+          displayAmount = -num;
+          // Deduct from source and add to dest
+          const srcAcc = accountsList.find(a => a.name.includes(account) || account.includes(a.name));
+          const dstAcc = accountsList.find(a => a.name.includes(destAccount) || destAccount.includes(a.name));
+          if (srcAcc) srcAcc.balance = Math.max(0, srcAcc.balance - num);
+          if (dstAcc) dstAcc.balance += num;
+        }
+
+        const newTx = {
+          id: Date.now(),
+          title: txType === 'transfer' ? `Chuyển ví: ${account} → ${destAccount}` : note,
+          category: txType === 'transfer' ? 'Chuyển tiền' : selectedCategory,
+          icon: txType === 'transfer' ? 'repeat' : selectedCategoryIcon,
+          account: account,
+          amount: displayAmount,
+          date: date,
+          time: timeNow,
+          type: txType === 'income' ? 'income' : 'expense'
+        };
+
+        txList.unshift(newTx);
+        updateFinancialStatsUI();
+        renderAllTransactions();
+        renderAccounts();
+        closeAllModals();
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        inputAmount.value = '';
+        document.getElementById('inputModalNote').value = '';
+
+        triggerToast(`Đã lưu giao dịch: ${txType === 'income' ? '+' : '-'}${formatVnd(num)} (${newTx.title}) thành công!`);
+      }, 250);
     });
 
     // Transaction Detail Modal
@@ -3119,10 +3813,25 @@
 
     document.getElementById('btnExecuteDelete').addEventListener('click', () => {
       if (activeDetailTxId) {
+        const txToDelete = txList.find(t => t.id === activeDetailTxId);
+        if (txToDelete) {
+          const absAmt = Math.abs(txToDelete.amount);
+          if (txToDelete.type === 'expense') {
+            financialStats.expense = Math.max(0, financialStats.expense - absAmt);
+            financialStats.remaining += absAmt;
+            financialStats.netWorth += absAmt;
+          } else if (txToDelete.type === 'income') {
+            financialStats.income = Math.max(0, financialStats.income - absAmt);
+            financialStats.remaining = Math.max(0, financialStats.remaining - absAmt);
+            financialStats.netWorth = Math.max(0, financialStats.netWorth - absAmt);
+          }
+        }
         txList = txList.filter(t => t.id !== activeDetailTxId);
+        updateFinancialStatsUI();
         renderAllTransactions();
+        renderAccounts();
         closeAllModals();
-        triggerToast('Đã xóa khoản giao dịch thành công!');
+        triggerToast('Đã xóa khoản giao dịch và cập nhật số dư!');
       }
     });
 
