@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import AnimatedNumber from '../components/AnimatedNumber';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
 
@@ -49,6 +50,7 @@ export default function ReportsScreen() {
   };
   const barOpts = {
     responsive: true, maintainAspectRatio: false,
+    animation: { duration: 1100, easing: 'easeOutQuart' },
     plugins: { legend: { labels: { color: textColor } } },
     scales: {
       x: { ticks: { color: textColor }, grid: { color: gridColor } },
@@ -73,6 +75,7 @@ export default function ReportsScreen() {
   };
   const doughnutOpts = {
     responsive: true, maintainAspectRatio: false,
+    animation: { duration: 1200, easing: 'easeOutQuart' },
     plugins: { legend: { position: 'right', labels: { color: textColor, boxWidth: 12 } } },
   };
 
@@ -99,7 +102,9 @@ export default function ReportsScreen() {
         ].map(({ label, val, color }) => (
           <div key={label} className="stat-card">
             <div className="stat-label">{label}</div>
-            <div className="stat-value" style={{ color }}>{hideBalance ? '•••• đ' : fmt(val)}</div>
+            <div className="stat-value" style={{ color }}>
+              <AnimatedNumber value={val} hideBalance={hideBalance} />
+            </div>
           </div>
         ))}
       </div>

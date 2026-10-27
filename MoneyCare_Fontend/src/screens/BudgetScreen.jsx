@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import AnimatedNumber from '../components/AnimatedNumber';
 import { Plus, Trash2, X, AlertTriangle } from 'lucide-react';
 
 export default function BudgetScreen() {
@@ -63,7 +64,9 @@ export default function BudgetScreen() {
         ].map(({ label, val, color }) => (
           <div key={label} className="stat-card">
             <div className="stat-label">{label}</div>
-            <div className="stat-value" style={{ color }}>{hideBalance ? '•••• đ' : fmt(val)}</div>
+            <div className="stat-value" style={{ color }}>
+              <AnimatedNumber value={val} hideBalance={hideBalance} />
+            </div>
           </div>
         ))}
       </div>

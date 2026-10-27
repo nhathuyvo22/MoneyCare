@@ -6,6 +6,7 @@ import BottomNav from './components/BottomNav'
 import ToastContainer from './components/ToastContainer'
 import AddTransactionModal from './components/AddTransactionModal'
 import AuthModal from './components/AuthModal'
+import AuthScreen from './screens/AuthScreen'
 
 // Screens
 import OverviewScreen from './screens/OverviewScreen'
@@ -16,23 +17,25 @@ import AccountsScreen from './screens/AccountsScreen'
 import ReportsScreen from './screens/ReportsScreen'
 import BillsScreen from './screens/BillsScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import InterestCalculatorScreen from './screens/InterestCalculatorScreen'
 
-function ScreenContent({ screen }) {
+function ScreenContent({ screen, onAddTx }) {
   switch (screen) {
-    case 'overview':     return <OverviewScreen />
-    case 'transactions': return <TransactionsScreen />
+    case 'overview':     return <OverviewScreen onAddTx={onAddTx} />
+    case 'transactions': return <TransactionsScreen onAddTx={onAddTx} />
     case 'budget':       return <BudgetScreen />
     case 'goals':        return <GoalsScreen />
+    case 'interest':     return <InterestCalculatorScreen />
     case 'accounts':     return <AccountsScreen />
     case 'reports':      return <ReportsScreen />
     case 'bills':        return <BillsScreen />
     case 'settings':     return <SettingsScreen />
-    default:             return <OverviewScreen />
+    default:             return <OverviewScreen onAddTx={onAddTx} />
   }
 }
 
 export default function App() {
-  const { screen, user, toasts } = useApp()
+  const { screen, user, token, toasts } = useApp()
   const [showAddTx, setShowAddTx] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authTab, setAuthTab] = useState('login')
@@ -40,6 +43,16 @@ export default function App() {
   const openAuth = (tab = 'login') => {
     setAuthTab(tab)
     setShowAuth(true)
+  }
+
+  // Auth Guard: Chưa đăng nhập buộc phải ở màn hình AuthScreen
+  if (!token || !user) {
+    return (
+      <>
+        <AuthScreen />
+        <ToastContainer toasts={toasts} />
+      </>
+    )
   }
 
   return (
@@ -55,7 +68,7 @@ export default function App() {
         />
 
         <main className="page-body">
-          <ScreenContent screen={screen} />
+          <ScreenContent screen={screen} onAddTx={() => setShowAddTx(true)} />
         </main>
       </div>
 

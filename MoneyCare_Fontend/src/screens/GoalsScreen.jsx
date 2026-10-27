@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import AnimatedNumber from '../components/AnimatedNumber';
 import { Plus, X, Loader } from 'lucide-react';
 
 export default function GoalsScreen() {
@@ -63,7 +64,7 @@ export default function GoalsScreen() {
                   <div style={{ fontSize: '2rem', marginBottom: 10 }}>{ICONS[i % ICONS.length]}</div>
                   <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 4 }}>{g.goalName}</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>
-                    {hideBalance ? '•••• đ' : fmt(g.currentAmount || 0)}
+                    <AnimatedNumber value={g.currentAmount || 0} hideBalance={hideBalance} />
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
                     Mục tiêu: {hideBalance ? '•••• đ' : fmt(g.targetAmount)} • Đến ngày {new Date(g.targetDate).toLocaleDateString('vi-VN')}

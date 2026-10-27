@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
+import AnimatedNumber from '../components/AnimatedNumber';
 import {
   TrendingUp, TrendingDown, Wallet, DollarSign,
-  ArrowRight, AlertTriangle, Target, Receipt, Zap,
+  ArrowRight, AlertTriangle, Target, Receipt, Zap, ArrowDownCircle,
 } from 'lucide-react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -16,14 +17,16 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Le
 // helper to detect dark mode
 const isDark = () => document.documentElement.classList.contains('dark');
 
-function StatCard({ label, value, icon: Icon, iconBg, color, hideBalance, fmt }) {
+function StatCard({ label, value, icon: Icon, iconBg, color, hideBalance, delayClass = '' }) {
   return (
-    <div className="stat-card">
+    <div className={`stat-card animate-fade-in ${delayClass}`}>
       <div className="stat-label">{label}</div>
       <div className="stat-value" style={{ color: color || 'var(--text-primary)' }}>
-        {hideBalance ? '•••••• đ' : fmt(value)}
+        <AnimatedNumber value={value} hideBalance={hideBalance} />
       </div>
-      <div className="stat-icon-bg" style={{ background: iconBg }}><Icon size={22} style={{ opacity: 1, color: iconBg }} /></div>
+      <div className="stat-icon-bg" style={{ background: iconBg }}>
+        <Icon size={22} style={{ opacity: 1, color: iconBg }} />
+      </div>
     </div>
   );
 }
@@ -69,6 +72,7 @@ export default function OverviewScreen() {
 
   const barOpts = {
     responsive: true, maintainAspectRatio: false,
+    animation: { duration: 1100, easing: 'easeOutQuart' },
     plugins: { legend: { labels: { color: textColor, font: { size: 12 } } } },
     scales: {
       x: { ticks: { color: textColor }, grid: { color: gridColor } },
@@ -94,6 +98,7 @@ export default function OverviewScreen() {
   };
   const doughnutOpts = {
     responsive: true, maintainAspectRatio: false,
+    animation: { duration: 1200, easing: 'easeOutQuart' },
     plugins: {
       legend: { position: 'bottom', labels: { color: textColor, boxWidth: 12, font: { size: 11 } } },
     },
@@ -117,21 +122,31 @@ export default function OverviewScreen() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Greeting */}
-      <div>
-        <h2 style={{ margin: 0, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)' }}>
-          Chào bạn! 👋 Tài chính tháng này đang ổn định.
-        </h2>
-        <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-          Hôm nay, {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontWeight: 800, fontSize: '1.3rem', color: 'var(--text-primary)' }}>
+            Chào bạn! 👋 Tài chính tháng này đang ổn định.
+          </h2>
+          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            Hôm nay, {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <button
+          className="btn btn-outline btn-sm"
+          onClick={() => setScreen('accounts')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+        >
+          <ArrowDownCircle size={15} style={{ color: 'var(--success)' }} />
+          <span>Nạp tiền vào ví</span>
+        </button>
       </div>
 
-      {/* Stat Cards */}
+      {/* Stat Cards with staggered animation and Count-up */}
       <div className="stat-grid">
-        <StatCard label="Tổng tài sản"   value={totalNetWorth}   icon={Wallet}      iconBg="var(--primary)"  color="var(--primary)" hideBalance={hideBalance} fmt={fmt} />
-        <StatCard label="Tổng thu"       value={monthlyIncome}   icon={TrendingUp}   iconBg="var(--success)"  color="var(--success)" hideBalance={hideBalance} fmt={fmt} />
-        <StatCard label="Tổng chi"       value={monthlyExpense}  icon={TrendingDown} iconBg="var(--danger)"   color="var(--danger)"  hideBalance={hideBalance} fmt={fmt} />
-        <StatCard label="Số dư còn lại"  value={remaining}       icon={DollarSign}   iconBg="var(--warning)"  color={remaining >= 0 ? 'var(--text-primary)' : 'var(--danger)'} hideBalance={hideBalance} fmt={fmt} />
+        <StatCard label="Tổng tài sản"   value={totalNetWorth}   icon={Wallet}      iconBg="var(--primary)"  color="var(--primary)" hideBalance={hideBalance} delayClass="stagger-1" />
+        <StatCard label="Tổng thu"       value={monthlyIncome}   icon={TrendingUp}   iconBg="var(--success)"  color="var(--success)" hideBalance={hideBalance} delayClass="stagger-2" />
+        <StatCard label="Tổng chi"       value={monthlyExpense}  icon={TrendingDown} iconBg="var(--danger)"   color="var(--danger)"  hideBalance={hideBalance} delayClass="stagger-3" />
+        <StatCard label="Số dư còn lại"  value={remaining}       icon={DollarSign}   iconBg="var(--warning)"  color={remaining >= 0 ? 'var(--text-primary)' : 'var(--danger)'} hideBalance={hideBalance} delayClass="stagger-4" />
       </div>
 
       {/* Charts */}
