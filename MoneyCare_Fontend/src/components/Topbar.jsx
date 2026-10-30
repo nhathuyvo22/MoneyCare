@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
   Menu, Search, Eye, EyeOff, Bell, Sun, Moon, Laptop,
   Plus, ChevronDown, LogOut, Settings, User,
-  LogIn, UserPlus, Check,
+  LogIn, UserPlus, Check, Shield,
 } from 'lucide-react';
 
 const SCREENS = [
@@ -37,6 +37,7 @@ export default function Topbar({ onAddTx, onAuthClick }) {
     hideBalance, setHideBalance,
     user, isLive, doLogout,
     notifications, unreadCount, markNotifRead,
+    isAdmin, setAppMode,
   } = useApp();
 
   const [searchOpen,  setSearchOpen]  = useState(false);
@@ -231,6 +232,23 @@ export default function Topbar({ onAddTx, onAuthClick }) {
           )}
         </div>
 
+        {/* Admin Switch Button (Chỉ hiển thị khi tài khoản có quyền Admin) */}
+        {isAdmin && (
+          <button
+            onClick={() => setAppMode('admin')}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-xs cursor-pointer transition-all active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #5427B8 0%, #F23891 100%)',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(84, 39, 184, 0.25)',
+            }}
+            title="Mở Bảng điều khiển Quản trị viên MoneyCare"
+          >
+            <Shield size={14} />
+            <span>Trang Quản trị 🛡️</span>
+          </button>
+        )}
+
         {/* Add Transaction */}
         <button className="btn btn-primary btn-sm hidden sm:flex" onClick={onAddTx}>
           <Plus size={15} />
@@ -291,6 +309,15 @@ export default function Topbar({ onAddTx, onAuthClick }) {
 
               {isLoggedIn ? (
                 <>
+                  {isAdmin && (
+                    <button
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--elevated)] transition-colors text-left"
+                      style={{ color: '#6339DB', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
+                      onClick={() => { setAppMode('admin'); setProfileOpen(false); }}
+                    >
+                      <Shield size={15} style={{ color: '#F23891' }} /> Chuyển sang Trang Quản trị 🛡️
+                    </button>
+                  )}
                   <button
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--elevated)] transition-colors"
                     style={{ color: 'var(--text-primary)', background: 'none', border: 'none', cursor: 'pointer' }}

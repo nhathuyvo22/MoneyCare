@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, ArrowLeftRight, PieChart, Target,
   CreditCard, BarChart3, Receipt, Settings,
-  TrendingUp, X, PiggyBank,
+  TrendingUp, X, PiggyBank, Shield,
 } from 'lucide-react';
 
 const NAV = [
@@ -19,7 +19,7 @@ const NAV = [
 ];
 
 export default function Sidebar() {
-  const { screen, setScreen, sidebarOpen, setSidebarOpen } = useApp();
+  const { screen, setScreen, sidebarOpen, setSidebarOpen, isAdmin, setAppMode } = useApp();
 
   const go = (id) => { setScreen(id); setSidebarOpen(false); };
 
@@ -51,6 +51,34 @@ export default function Sidebar() {
             <X size={16} />
           </button>
         </div>
+
+        {/* Admin Switch button for admin role */}
+        {isAdmin && (
+          <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+            <button
+              onClick={() => { setAppMode('admin'); setSidebarOpen(false); }}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #5427B8 0%, #F23891 100%)',
+                color: '#fff',
+                fontWeight: 700,
+                borderRadius: 'var(--radius-md)',
+                padding: '9px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.82rem',
+                boxShadow: '0 2px 8px rgba(84, 39, 184, 0.25)',
+              }}
+            >
+              <Shield size={16} />
+              <span>Trang Quản trị Admin 🛡️</span>
+            </button>
+          </div>
+        )}
 
         {/* Nav */}
         <div className="flex-1 py-2 overflow-y-auto">

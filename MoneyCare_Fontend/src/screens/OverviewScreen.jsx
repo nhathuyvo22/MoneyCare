@@ -272,7 +272,7 @@ export default function OverviewScreen() {
                 const pct = g.targetAmount ? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100)) : 0;
                 return (
                   <div key={g.id} style={{ background: 'var(--bg)', borderRadius: 'var(--radius-lg)', padding: 16, border: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.87rem', color: 'var(--text-primary)', marginBottom: 8 }}>{g.goalName}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.87rem', color: 'var(--text-primary)', marginBottom: 8 }}>{g.goalName || g.name}</div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 10 }}>
                       {hideBalance ? '••••' : fmt(g.currentAmount)} / {hideBalance ? '••••' : fmt(g.targetAmount)}
                     </div>

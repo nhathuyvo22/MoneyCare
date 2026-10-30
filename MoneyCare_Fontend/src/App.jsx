@@ -7,6 +7,7 @@ import ToastContainer from './components/ToastContainer'
 import AddTransactionModal from './components/AddTransactionModal'
 import AuthModal from './components/AuthModal'
 import AuthScreen from './screens/AuthScreen'
+import AdminDashboardView from './admin/AdminDashboardView'
 
 // Screens
 import OverviewScreen from './screens/OverviewScreen'
@@ -35,7 +36,7 @@ function ScreenContent({ screen, onAddTx }) {
 }
 
 export default function App() {
-  const { screen, user, token, toasts } = useApp()
+  const { screen, user, token, toasts, isAdmin, appMode } = useApp()
   const [showAddTx, setShowAddTx] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authTab, setAuthTab] = useState('login')
@@ -50,6 +51,16 @@ export default function App() {
     return (
       <>
         <AuthScreen />
+        <ToastContainer toasts={toasts} />
+      </>
+    )
+  }
+
+  // Chế độ Quản trị (Admin Mode) dành riêng cho tài khoản có quyền Admin
+  if (isAdmin && appMode === 'admin') {
+    return (
+      <>
+        <AdminDashboardView />
         <ToastContainer toasts={toasts} />
       </>
     )

@@ -66,8 +66,54 @@ export function AppProvider({ children }) {
   // ── balance privacy ──
   const [hideBalance, setHideBalance] = useState(false);
 
-  // ── current screen ──
-  const [screen, setScreen]   = useState('overview');
+  // ── toasts ──
+  const [toasts, setToasts] = useState([]);
+  const toastId = useRef(0);
+  const toast = useCallback((msg, type = 'success') => {
+    const id = ++toastId.current;
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  }, []);
+
+  // ── admin role check ──
+  // id_vai_tro = 1 là ADMIN, id_vai_tro = 2 là USER (theo bảng VaiTro trong DB)
+  const isAdmin = Boolean(
+    user && (
+      user.roleId === 1 ||
+      user.role === 'ADMIN' ||
+      user.role === 'SUPER_ADMIN' ||
+      (Array.isArray(user.authorities) && user.authorities.some(a => a === 'ROLE_ADMIN'))
+    )
+  );
+
+  // ── app mode: 'user' | 'admin' ──
+  const [appMode, setAppModeRaw] = useState(() => {
+    const saved = localStorage.getItem('mc_app_mode');
+    return saved === 'admin' ? 'admin' : 'user';
+  });
+
+  const setAppMode = useCallback((mode) => {
+    if (mode === 'admin' && !isAdmin) {
+      toast('Tài khoản của bạn không có quyền Quản trị (Admin)!', 'error');
+      return;
+    }
+    localStorage.setItem('mc_app_mode', mode);
+    setAppModeRaw(mode);
+  }, [isAdmin, toast]);
+
+  // ── current screen (persisted to localStorage) ──
+  const VALID_SCREENS = ['overview','transactions','budget','goals','interest','accounts','reports','bills','settings'];
+  const [screen, setScreenRaw] = useState(() => {
+    const saved = localStorage.getItem('mc_screen');
+    return VALID_SCREENS.includes(saved) ? saved : 'overview';
+  });
+
+  const setScreen = useCallback((id) => {
+    if (VALID_SCREENS.includes(id)) {
+      localStorage.setItem('mc_screen', id);
+    }
+    setScreenRaw(id);
+  }, []);
 
   // ── sidebar open (mobile) ──
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -85,14 +131,6 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState({});
   const setLoad = (key, val) => setLoading(prev => ({ ...prev, [key]: val }));
 
-  // ── toasts ──
-  const [toasts, setToasts] = useState([]);
-  const toastId = useRef(0);
-  const toast = useCallback((msg, type = 'success') => {
-    const id = ++toastId.current;
-    setToasts(prev => [...prev, { id, msg, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
-  }, []);
 
   // ── probe backend ──
   const probeBackend = useCallback(async () => {
@@ -131,15 +169,31 @@ export function AppProvider({ children }) {
     if (!token) return;
     setLoad('sync', true);
     try {
-      const [accs, txs, cats, buds, goals, bls, notifs] = await Promise.allSettled([
+      const [accs, txs, cats, buds, goals, bls, notifs, stxs] = await Promise.allSettled([
         api.getAccounts(), api.getTransactions(), api.getCategories(),
         api.getBudgets(), api.getSavingsGoals(), api.getBills(), api.getNotifications(),
+        api.getSavingsTx(),
       ]);
       if (accs.status === 'fulfilled' && Array.isArray(accs.value)) setAccounts(accs.value);
       if (txs.status  === 'fulfilled' && Array.isArray(txs.value)) setTransactions(txs.value);
       if (cats.status === 'fulfilled' && Array.isArray(cats.value) && cats.value.length > 0) setCategories(cats.value);
       if (buds.status === 'fulfilled' && Array.isArray(buds.value)) setBudgets(buds.value);
-      if (goals.status=== 'fulfilled' && Array.isArray(goals.value)) setSavingsGoals(goals.value);
+      if (goals.status=== 'fulfilled' && Array.isArray(goals.value)) {
+        const savingsTxList = (stxs.status === 'fulfilled' && Array.isArray(stxs.value)) ? stxs.value : [];
+        setSavingsGoals(goals.value.map(g => {
+          const goalTxs = savingsTxList.filter(st => st.goalId === g.id);
+          const savedAmount = goalTxs.reduce((sum, st) => {
+            const amt = Number(st.amount) || 0;
+            return st.movementType === 'RUT' ? sum - amt : sum + amt;
+          }, 0);
+          return {
+            ...g,
+            name: g.name || g.goalName,
+            goalName: g.goalName || g.name,
+            currentAmount: g.currentAmount != null && g.currentAmount > 0 ? Number(g.currentAmount) : savedAmount,
+          };
+        }));
+      }
       if (bls.status  === 'fulfilled' && Array.isArray(bls.value)) setBills(bls.value);
       if (notifs.status==='fulfilled' && Array.isArray(notifs.value)) setNotifications(notifs.value);
     } catch (e) {
@@ -209,15 +263,20 @@ export function AppProvider({ children }) {
   const doLogout = useCallback(() => {
     localStorage.removeItem('moneycare_jwt');
     localStorage.removeItem('moneycare_user');
+    localStorage.removeItem('mc_screen');
+    localStorage.removeItem('mc_app_mode');
+    localStorage.removeItem('mc_admin_screen');
     setToken(null);
     setUser(null);
     setIsLive(false);
+    setAppModeRaw('user');
     setAccounts([]);
     setTransactions([]);
     setBudgets([]);
     setSavingsGoals([]);
     setBills([]);
     setNotifications([]);
+    setScreenRaw('overview');
     toast('Đã đăng xuất thành công.');
   }, [toast]);
 
@@ -357,24 +416,51 @@ export function AppProvider({ children }) {
   // ── add savings goal ──
   const addSavingsGoal = useCallback(async (data) => {
     try {
+      const gName = data.name || data.goalName || '';
+      const payload = {
+        name: gName,
+        goalName: gName,
+        targetAmount: Number(data.targetAmount),
+        startDate: data.startDate || new Date().toISOString().split('T')[0],
+        targetDate: data.targetDate || null,
+        description: data.description || '',
+        status: data.status || 'ACTIVE',
+      };
+
       if (isLive && token) {
-        await api.createSavingsGoal(data);
-        const g = await api.getSavingsGoals();
-        setSavingsGoals(g);
+        await api.createSavingsGoal(payload);
+        await syncAll();
       } else {
-        setSavingsGoals(prev => [...prev, { ...data, id: Date.now(), currentAmount: 0, status: 'IN_PROGRESS' }]);
+        setSavingsGoals(prev => [
+          ...prev,
+          {
+            ...payload,
+            id: Date.now(),
+            currentAmount: Number(data.currentAmount) || 0,
+            status: 'ACTIVE'
+          }
+        ]);
       }
-      toast('Đã tạo mục tiêu tiết kiệm!');
+      toast('Đã tạo mục tiêu tiết kiệm thành công! 🎯');
+      return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
+      return false;
     }
-  }, [isLive, token]);
+  }, [isLive, token, syncAll, toast]);
 
   // ── deposit savings ──
   const depositSavings = useCallback(async (goalId, amount, accountId) => {
     try {
       if (isLive && token) {
-        await api.createSavingsTx({ goalId, amount, accountId, transactionDate: new Date().toISOString() });
+        await api.createSavingsTx({
+          goalId,
+          amount,
+          accountId,
+          movementType: 'NAP',
+          transactionDate: new Date().toISOString(),
+          note: 'Nạp tiền tích lũy mục tiêu'
+        });
         await syncAll();
       } else {
         setSavingsGoals(prev => prev.map(g =>
@@ -384,11 +470,13 @@ export function AppProvider({ children }) {
           a.id === accountId ? { ...a, balance: Math.max(0, (a.balance || 0) - amount) } : a
         ));
       }
-      toast(`Đã nạp ${fmt(amount)} vào hũ tiết kiệm!`);
+      toast(`Đã nạp ${fmt(amount)} vào hũ tiết kiệm! 💰`);
+      return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
+      return false;
     }
-  }, [isLive, token, syncAll]);
+  }, [isLive, token, syncAll, fmt, toast]);
 
   // ── add bill ──
   const addBill = useCallback(async (data) => {
@@ -441,7 +529,7 @@ export function AppProvider({ children }) {
       // theme
       themeMode, setThemeMode,
       // auth / backend
-      isLive, backendUp, user, token,
+      isLive, backendUp, user, token, isAdmin, appMode, setAppMode,
       doLogin, doRegister, doLogout, probeBackend, syncAll,
       // screen
       screen, setScreen,

@@ -109,16 +109,18 @@ export default function InterestCalculatorScreen() {
 
   // Tạo mục tiêu tiết kiệm từ kết quả tính
   const handleOpenGoal = async () => {
+    const goalTitle = `Tiết kiệm ${calculation.months} tháng (${calculation.rate}%)`;
     await addSavingsGoal({
-      goalName: `Tiết kiệm ${calculation.months} tháng (${calculation.rate}%)`,
+      name: goalTitle,
+      goalName: goalTitle,
       targetAmount: calculation.total,
       currentAmount: depositAmount,
+      startDate: new Date().toISOString().split('T')[0],
       targetDate: new Date(Date.now() + calculation.months * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       icon: 'PiggyBank',
       color: '#E83E8C',
     });
-    toast('Đã tạo sổ mục tiêu tiết kiệm thành công! Chuyển đến trang Mục tiêu...');
-    setTimeout(() => setScreen('goals'), 800);
+    setTimeout(() => setScreen('goals'), 600);
   };
 
   const handleAmountChange = (e) => {

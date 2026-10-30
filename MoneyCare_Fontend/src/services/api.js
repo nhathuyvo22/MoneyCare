@@ -42,9 +42,15 @@ async function request(endpoint, method = 'GET', body = null) {
     throw new Error(msg);
   }
 
-  const ct = res.headers.get('content-type');
-  if (ct && ct.includes('application/json')) return res.json();
-  return res.text();
+  const text = await res.text();
+  if (!text || !text.trim()) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Phản hồi dạng chuỗi text thuần túy từ Backend (VD: "Them thanh cong!", "Xoa thanh cong!")
+    return text;
+  }
 }
 
 // ── AUTH ────────────────────────────────────────────────────────
@@ -55,6 +61,17 @@ export const register = (data) =>
   request('/api/users', 'POST', data);
 
 export const getMe = () => request('/api/auth/me');
+
+// ── USERS & ADMIN ───────────────────────────────────────────────
+export const getUsers        = ()         => request('/api/users');
+export const getUserById     = (id)       => request(`/api/users/${id}`);
+export const createUser      = (data)     => request('/api/users', 'POST', data);
+export const updateUser      = (id, data) => request(`/api/users/${id}`, 'PUT', data);
+export const deleteUser      = (id)       => request(`/api/users/${id}`, 'DELETE');
+
+// ── ACTIVITY LOGS ────────────────────────────────────────────────
+export const getActivityLogs = ()         => request('/api/activity-logs');
+export const createActivityLog = (data)   => request('/api/activity-logs', 'POST', data);
 
 // ── ACCOUNTS ─────────────────────────────────────────────────────
 export const getAccounts    = ()         => request('/api/accounts');
@@ -71,6 +88,7 @@ export const deleteTransaction = (id)      => request(`/api/transactions/${id}`,
 // ── CATEGORIES ───────────────────────────────────────────────────
 export const getCategories   = ()         => request('/api/categories');
 export const createCategory  = (data)     => request('/api/categories', 'POST', data);
+export const updateCategory  = (id, data) => request(`/api/categories/${id}`, 'PUT', data);
 export const deleteCategory  = (id)       => request(`/api/categories/${id}`, 'DELETE');
 
 // ── BUDGETS ──────────────────────────────────────────────────────

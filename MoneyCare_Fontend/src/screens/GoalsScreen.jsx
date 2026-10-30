@@ -22,7 +22,16 @@ export default function GoalsScreen() {
     if (!form.targetDate) err.targetDate = 'Chọn ngày mục tiêu';
     setErrors(err);
     if (Object.keys(err).length) return;
-    await addSavingsGoal({ goalName: form.goalName, targetAmount: t, currentAmount: 0, targetDate: form.targetDate });
+    await addSavingsGoal({
+      name: form.goalName.trim(),
+      goalName: form.goalName.trim(),
+      targetAmount: t,
+      currentAmount: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      targetDate: form.targetDate,
+      description: '',
+      status: 'ACTIVE',
+    });
     setForm({ goalName: '', targetAmount: '', targetDate: '', accountId: '' });
     setShowAdd(false);
   };
@@ -62,12 +71,12 @@ export default function GoalsScreen() {
               {goalsWithPct.map((g, i) => (
                 <div key={g.id} style={{ background: 'var(--bg)', borderRadius: 'var(--radius-xl)', padding: 20, border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: '2rem', marginBottom: 10 }}>{ICONS[i % ICONS.length]}</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 4 }}>{g.goalName}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)', marginBottom: 4 }}>{g.goalName || g.name}</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>
                     <AnimatedNumber value={g.currentAmount || 0} hideBalance={hideBalance} />
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                    Mục tiêu: {hideBalance ? '•••• đ' : fmt(g.targetAmount)} • Đến ngày {new Date(g.targetDate).toLocaleDateString('vi-VN')}
+                    Mục tiêu: {hideBalance ? '•••• đ' : fmt(g.targetAmount)} • {g.targetDate ? `Đến ngày ${new Date(g.targetDate).toLocaleDateString('vi-VN')}` : 'Không thời hạn'}
                   </div>
                   <div className="progress-bar" style={{ marginBottom: 6 }}>
                     <div className="progress-fill" style={{ width: `${g.pct}%`, background: g.pct >= 100 ? 'var(--success)' : 'var(--primary)' }} />
