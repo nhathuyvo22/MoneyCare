@@ -110,6 +110,14 @@ export function AdminProvider({ children }) {
         })));
       }
 
+      // Build categoryMap: { categoryId -> categoryName }
+      let categoryMap = {};
+      if (c.status === 'fulfilled' && Array.isArray(c.value)) {
+        c.value.forEach(cat => {
+          if (cat.id) categoryMap[cat.id] = cat.categoryName;
+        });
+      }
+
       if (tx.status === 'fulfilled' && Array.isArray(tx.value) && tx.value.length > 0) {
         setTransactions(tx.value.map((item, idx) => ({
           ...item,
@@ -118,7 +126,7 @@ export function AdminProvider({ children }) {
           // type là enum CategoryType: INCOME / EXPENSE / TRANSFER
           type: String(item.type || 'EXPENSE'),
           transactionDate: item.transactionDate ? String(item.transactionDate).split('T')[0] : null,
-          categoryName: item.categoryName || '—',
+          categoryName: categoryMap[item.categoryId] || item.categoryName || 'Khác',
           status: item.status || 'COMPLETED',
           paymentMethod: item.paymentMethod || 'Tiền mặt',
           // userName resolve từ userId

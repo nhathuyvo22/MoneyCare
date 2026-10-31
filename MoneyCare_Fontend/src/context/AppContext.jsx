@@ -56,12 +56,12 @@ export function AppProvider({ children }) {
   }, [themeMode, applyTheme]);
 
   // ── backend / auth ──
-  const [isLive, setIsLive]   = useState(false);
+  const [isLive, setIsLive] = useState(false);
   const [backendUp, setBackendUp] = useState(false);
-  const [user, setUser]       = useState(() => {
+  const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('moneycare_user') || 'null'); } catch { return null; }
   });
-  const [token, setToken]     = useState(() => localStorage.getItem('moneycare_jwt') || null);
+  const [token, setToken] = useState(() => localStorage.getItem('moneycare_jwt') || null);
 
   // ── balance privacy ──
   const [hideBalance, setHideBalance] = useState(false);
@@ -102,7 +102,7 @@ export function AppProvider({ children }) {
   }, [isAdmin, toast]);
 
   // ── current screen (persisted to localStorage) ──
-  const VALID_SCREENS = ['overview','transactions','budget','goals','interest','accounts','reports','bills','settings'];
+  const VALID_SCREENS = ['overview', 'transactions', 'budget', 'goals', 'interest', 'accounts', 'reports', 'bills', 'settings'];
   const [screen, setScreenRaw] = useState(() => {
     const saved = localStorage.getItem('mc_screen');
     return VALID_SCREENS.includes(saved) ? saved : 'overview';
@@ -119,12 +119,12 @@ export function AppProvider({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── data (100% dữ liệu thực từ Backend, mặc định rỗng []) ──
-  const [accounts,      setAccounts]      = useState([]);
-  const [transactions,  setTransactions]  = useState([]);
-  const [categories,    setCategories]    = useState(DEFAULT_CATEGORIES);
-  const [budgets,       setBudgets]       = useState([]);
-  const [savingsGoals,  setSavingsGoals]  = useState([]);
-  const [bills,         setBills]         = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [budgets, setBudgets] = useState([]);
+  const [savingsGoals, setSavingsGoals] = useState([]);
+  const [bills, setBills] = useState([]);
   const [notifications, setNotifications] = useState([]);
 
   // ── loading ──
@@ -175,10 +175,10 @@ export function AppProvider({ children }) {
         api.getSavingsTx(),
       ]);
       if (accs.status === 'fulfilled' && Array.isArray(accs.value)) setAccounts(accs.value);
-      if (txs.status  === 'fulfilled' && Array.isArray(txs.value)) setTransactions(txs.value);
+      if (txs.status === 'fulfilled' && Array.isArray(txs.value)) setTransactions(txs.value);
       if (cats.status === 'fulfilled' && Array.isArray(cats.value) && cats.value.length > 0) setCategories(cats.value);
       if (buds.status === 'fulfilled' && Array.isArray(buds.value)) setBudgets(buds.value);
-      if (goals.status=== 'fulfilled' && Array.isArray(goals.value)) {
+      if (goals.status === 'fulfilled' && Array.isArray(goals.value)) {
         const savingsTxList = (stxs.status === 'fulfilled' && Array.isArray(stxs.value)) ? stxs.value : [];
         setSavingsGoals(goals.value.map(g => {
           const goalTxs = savingsTxList.filter(st => st.goalId === g.id);
@@ -194,8 +194,8 @@ export function AppProvider({ children }) {
           };
         }));
       }
-      if (bls.status  === 'fulfilled' && Array.isArray(bls.value)) setBills(bls.value);
-      if (notifs.status==='fulfilled' && Array.isArray(notifs.value)) setNotifications(notifs.value);
+      if (bls.status === 'fulfilled' && Array.isArray(bls.value)) setBills(bls.value);
+      if (notifs.status === 'fulfilled' && Array.isArray(notifs.value)) setNotifications(notifs.value);
     } catch (e) {
       toast('Lỗi đồng bộ dữ liệu: ' + e.message, 'error');
     } finally {
@@ -420,6 +420,7 @@ export function AppProvider({ children }) {
       const payload = {
         name: gName,
         goalName: gName,
+        userId: user?.id,
         targetAmount: Number(data.targetAmount),
         startDate: data.startDate || new Date().toISOString().split('T')[0],
         targetDate: data.targetDate || null,
@@ -428,21 +429,21 @@ export function AppProvider({ children }) {
       };
 
       if (isLive && token) {
-        await api.createSavingsGoal(payload);
+        const created = await api.createSavingsGoal(payload);
         await syncAll();
+        toast('Đã tạo mục tiêu tiết kiệm thành công! 🎯');
+        return created;
       } else {
-        setSavingsGoals(prev => [
-          ...prev,
-          {
-            ...payload,
-            id: Date.now(),
-            currentAmount: Number(data.currentAmount) || 0,
-            status: 'ACTIVE'
-          }
-        ]);
+        const newGoal = {
+          ...payload,
+          id: Date.now(),
+          currentAmount: Number(data.currentAmount) || 0,
+          status: 'ACTIVE'
+        };
+        setSavingsGoals(prev => [...prev, newGoal]);
+        toast('Đã tạo mục tiêu tiết kiệm thành công! 🎯');
+        return newGoal;
       }
-      toast('Đã tạo mục tiêu tiết kiệm thành công! 🎯');
-      return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
       return false;
@@ -547,7 +548,7 @@ export function AppProvider({ children }) {
       markNotifRead,
       // computed
       totalNetWorth, monthlyIncome, monthlyExpense,
-      remaining: monthlyIncome - monthlyExpense,
+      remaining: totalNetWorth + monthlyIncome - monthlyExpense,
       unreadCount,
       // ui helpers
       loading, toast,

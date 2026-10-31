@@ -4,7 +4,7 @@ import AnimatedNumber from '../components/AnimatedNumber';
 import {
   PiggyBank, Calculator, PieChart, Landmark, DollarSign,
   ChevronDown, ChevronUp, Sparkles, ArrowRight, CheckCircle2,
-  Info, ShieldCheck, TrendingUp
+  Info, ShieldCheck, TrendingUp, Wallet, AlertCircle
 } from 'lucide-react';
 
 // Danh sách các tiện ích tài chính trên top bar tham khảo MoMo
@@ -29,13 +29,30 @@ const TENURES = [
 const QUICK_AMOUNTS = [1000000, 5000000, 10000000, 50000000, 100000000];
 
 export default function InterestCalculatorScreen() {
-  const { addSavingsGoal, setScreen, toast, fmt } = useApp();
+  const { addSavingsGoal, depositSavings, accounts, setScreen, toast, fmt } = useApp();
 
   const [activeTool, setActiveTool] = useState('saving');
   const [depositType, setDepositType] = useState('one_time'); // 'one_time' | 'monthly'
   const [depositAmount, setDepositAmount] = useState(100000); // 100.000 đ như trong ảnh
   const [selectedTenure, setSelectedTenure] = useState(TENURES[1]); // 9 tháng mặc định
   const [showComparison, setShowComparison] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState(() => accounts[0]?.id || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Cập nhật selectedAccountId khi accounts load xong
+  const activeAccounts = useMemo(() => {
+    return accounts.filter(a => a.status !== 'ARCHIVED');
+  }, [accounts]);
+
+  const selectedAccount = useMemo(() => {
+    return activeAccounts.find(a => String(a.id) === String(selectedAccountId)) || activeAccounts[0] || null;
+  }, [activeAccounts, selectedAccountId]);
+
+  // Kiểm tra số dư có đủ không
+  const isBalanceEnough = useMemo(() => {
+    if (!selectedAccount) return false;
+    return (selectedAccount.balance || 0) >= (Number(depositAmount) || 0);
+  }, [selectedAccount, depositAmount]);
 
   // Tính toán lãi suất
   const calculation = useMemo(() => {
@@ -107,20 +124,53 @@ export default function InterestCalculatorScreen() {
     });
   }, [depositAmount, depositType]);
 
-  // Tạo mục tiêu tiết kiệm từ kết quả tính
+  // Tạo mục tiêu tiết kiệm từ kết quả tính và trích tiền từ Ví đã chọn
   const handleOpenGoal = async () => {
-    const goalTitle = `Tiết kiệm ${calculation.months} tháng (${calculation.rate}%)`;
-    await addSavingsGoal({
-      name: goalTitle,
-      goalName: goalTitle,
-      targetAmount: calculation.total,
-      currentAmount: depositAmount,
-      startDate: new Date().toISOString().split('T')[0],
-      targetDate: new Date(Date.now() + calculation.months * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      icon: 'PiggyBank',
-      color: '#E83E8C',
-    });
-    setTimeout(() => setScreen('goals'), 600);
+    if (!depositAmount || depositAmount <= 0) {
+      toast('Vui lòng nhập số tiền muốn gửi tiết kiệm!', 'error');
+      return;
+    }
+
+    if (!selectedAccount) {
+      toast('Vui lòng chọn ví / tài khoản nguồn để trích tiền!', 'error');
+      return;
+    }
+
+    if (!isBalanceEnough) {
+      toast(`Số dư trong ví "${selectedAccount.accountName}" không đủ (${fmt(selectedAccount.balance)}). Vui lòng chọn ví khác hoặc nạp thêm tiền!`, 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const goalTitle = `Tiết kiệm ${calculation.months} tháng (${calculation.rate}%)`;
+      // 1. Tạo sổ / mục tiêu tiết kiệm
+      const createdGoal = await addSavingsGoal({
+        name: goalTitle,
+        goalName: goalTitle,
+        targetAmount: calculation.total,
+        currentAmount: depositAmount,
+        startDate: new Date().toISOString().split('T')[0],
+        targetDate: new Date(Date.now() + calculation.months * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        icon: 'PiggyBank',
+        color: '#E83E8C',
+      });
+
+      // 2. Trích tiền từ ví và ghi nhận giao dịch nạp vào sổ tiết kiệm
+      if (createdGoal && (createdGoal.id || typeof createdGoal === 'object')) {
+        const goalId = createdGoal.id || (typeof createdGoal === 'number' ? createdGoal : null);
+        if (goalId) {
+          await depositSavings(goalId, Number(depositAmount), Number(selectedAccount.id));
+        }
+      }
+
+      toast(`Đã gửi ${fmt(depositAmount)} vào sổ tiết kiệm từ ví "${selectedAccount.accountName}" thành công! 🎉`);
+      setTimeout(() => setScreen('goals'), 800);
+    } catch (err) {
+      toast('Có lỗi xảy ra: ' + err.message, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAmountChange = (e) => {
@@ -334,6 +384,76 @@ export default function InterestCalculatorScreen() {
                 </div>
               </div>
 
+              {/* NGUỒN TIỀN TRÍCH GỬI (CHỌN TÀI KHOẢN / VÍ) */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <label className="form-label" style={{ fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Wallet size={16} style={{ color: '#E83E8C' }} />
+                    <span>Nguồn tiền trích gửi (Ví / Tài khoản)</span>
+                  </label>
+                  {selectedAccount && (
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: isBalanceEnough ? 'var(--success)' : 'var(--danger)',
+                    }}>
+                      Số dư: {fmt(selectedAccount.balance)}
+                    </span>
+                  )}
+                </div>
+
+                {activeAccounts.length === 0 ? (
+                  <div style={{
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--bg)',
+                    border: '1px dashed var(--border)',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-muted)'
+                  }}>
+                    Chưa có tài khoản ví nào. Vui lòng thêm ví tại mục "Tài khoản & Ví".
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <select
+                      className="form-control"
+                      value={selectedAccountId || activeAccounts[0]?.id || ''}
+                      onChange={e => setSelectedAccountId(e.target.value)}
+                      style={{
+                        padding: '10px 14px',
+                        fontSize: '0.88rem',
+                        fontWeight: 600,
+                        borderColor: !isBalanceEnough ? 'var(--danger)' : 'var(--border)'
+                      }}
+                    >
+                      {activeAccounts.map(acc => (
+                        <option key={acc.id} value={acc.id}>
+                          {acc.accountName} — [Số dư: {fmt(acc.balance)}]
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Cảnh báo số dư không đủ */}
+                    {!isBalanceEnough && selectedAccount && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        color: 'var(--danger)',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        padding: '6px 10px',
+                        borderRadius: 'var(--radius-sm)'
+                      }}>
+                        <AlertCircle size={14} />
+                        <span>Số dư ví không đủ để gửi {fmt(depositAmount)}. Vui lòng chọn ví khác!</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Kỳ hạn gửi và Lãi suất */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
@@ -494,24 +614,28 @@ export default function InterestCalculatorScreen() {
                 type="button"
                 className="btn btn-full"
                 onClick={handleOpenGoal}
+                disabled={isSubmitting || !isBalanceEnough || !selectedAccount}
                 style={{
-                  background: 'linear-gradient(135deg, #E83E8C 0%, #D81B60 100%)',
-                  color: '#FFFFFF',
+                  background: !isBalanceEnough || !selectedAccount
+                    ? 'var(--border)'
+                    : 'linear-gradient(135deg, #E83E8C 0%, #D81B60 100%)',
+                  color: !isBalanceEnough || !selectedAccount ? 'var(--text-muted)' : '#FFFFFF',
                   border: 'none',
                   padding: '13px 20px',
                   borderRadius: 'var(--radius-md)',
                   fontWeight: 800,
                   fontSize: '0.95rem',
-                  boxShadow: '0 6px 20px rgba(232, 62, 140, 0.35)',
-                  cursor: 'pointer',
+                  boxShadow: isBalanceEnough && selectedAccount ? '0 6px 20px rgba(232, 62, 140, 0.35)' : 'none',
+                  cursor: isBalanceEnough && selectedAccount ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
                   transition: 'all 200ms ease',
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                <span>Gửi tiết kiệm Online</span>
+                <span>{isSubmitting ? 'Đang trích tiền & tạo sổ...' : (isBalanceEnough ? 'Gửi tiết kiệm Online' : 'Số dư ví không đủ')}</span>
                 <ArrowRight size={16} />
               </button>
 

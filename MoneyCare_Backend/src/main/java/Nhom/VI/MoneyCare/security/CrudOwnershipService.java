@@ -63,11 +63,13 @@ public class CrudOwnershipService {
             }
             return;
         }
+        if (entity instanceof UserOwnedEntity userOwnedEntity) {
+            if (userOwnedEntity.getUserId() == null) {
+                userOwnedEntity.setUserId(userId);
+            }
+        }
         if (isAdmin()) {
             return;
-        }
-        if (entity instanceof UserOwnedEntity userOwnedEntity) {
-            userOwnedEntity.setUserId(userId);
         }
         if (!canRead(entity, userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource not found");
@@ -141,6 +143,7 @@ public class CrudOwnershipService {
     private boolean isAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())
+                        || "ADMIN".equals(authority.getAuthority()));
     }
 }
