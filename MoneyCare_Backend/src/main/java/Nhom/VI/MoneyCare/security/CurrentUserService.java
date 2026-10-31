@@ -28,8 +28,18 @@ public class CurrentUserService {
     }
 
     public void requireCurrentUser(Long requestedUserId) {
-        if (!Objects.equals(getUserId(), requestedUserId)) {
+        if (!isAdmin() && !Objects.equals(getUserId(), requestedUserId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
         }
+    }
+
+    public boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equalsIgnoreCase(authority.getAuthority())
+                        || "ADMIN".equalsIgnoreCase(authority.getAuthority()));
     }
 }

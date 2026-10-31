@@ -119,6 +119,8 @@ export function AdminProvider({ children }) {
           type: String(item.type || 'EXPENSE'),
           transactionDate: item.transactionDate ? String(item.transactionDate).split('T')[0] : null,
           categoryName: item.categoryName || '—',
+          status: item.status || 'COMPLETED',
+          paymentMethod: item.paymentMethod || 'Tiền mặt',
           // userName resolve từ userId
           userName: userMap[item.userId] || item.userName || `Người dùng #${item.userId}`,
         })));

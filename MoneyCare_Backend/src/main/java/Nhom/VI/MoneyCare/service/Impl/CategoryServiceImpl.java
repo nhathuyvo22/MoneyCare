@@ -25,6 +25,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<Category> getAllCategories() {
+        if (currentUserService.isAdmin()) {
+            return categoryRepository.findAll();
+        }
         Long userId = currentUserService.getUserId();
         List<Category> categories = new java.util.ArrayList<>(categoryRepository.findByUserId(null));
         categories.addAll(categoryRepository.findByUserId(userId));
@@ -33,6 +36,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category getCategoryById(Long id) {
+        if (currentUserService.isAdmin()) {
+            return categoryRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Khong tim thay Category"));
+        }
         Long userId = currentUserService.getUserId();
         return categoryRepository.findById(id)
                 .filter(category -> category.getUserId() == null || category.getUserId().equals(userId))
@@ -45,7 +53,9 @@ public class CategoryServiceImpl implements CategoryService {
         if (category.getCategoryName() == null || category.getCategoryName().isBlank()) {
             throw new BadRequestException("Ten danh muc khong duoc de trong");
         }
-        category.setUserId(currentUserService.getUserId());
+        if (category.getUserId() == null || !currentUserService.isAdmin()) {
+            category.setUserId(currentUserService.getUserId());
+        }
         validateParentCategory(category.getParentCategoryId(), null);
         if (category.getType() == null || category.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
             throw new BadRequestException("Danh muc chi duoc co loai THU hoac CHI");
@@ -78,6 +88,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private Category getOwnedCategoryById(Long id) {
+        if (currentUserService.isAdmin()) {
+            return categoryRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Khong tim thay Category"));
+        }
         return categoryRepository.findByIdAndUserId(id, currentUserService.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Khong tim thay Category"));
     }

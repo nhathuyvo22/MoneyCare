@@ -28,11 +28,20 @@ export default function Transactions() {
     }
   };
 
+  // Thống kê động từ dữ liệu thật
+  const totalTxCount = transactions.length;
+  const totalIncome = transactions
+    .filter(t => t.type === 'INCOME' || t.type === 'THU')
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const totalExpense = transactions
+    .filter(t => t.type === 'EXPENSE' || t.type === 'CHI')
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+
   // Filtered dataset
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
       const matchType = typeFilter === 'ALL' || tx.type === typeFilter;
-      const matchStatus = statusFilter === 'ALL' || tx.status === statusFilter;
+      const matchStatus = statusFilter === 'ALL' || (tx.status || 'COMPLETED') === statusFilter;
       return matchType && matchStatus;
     });
   }, [transactions, typeFilter, statusFilter]);
@@ -106,8 +115,9 @@ export default function Transactions() {
       label: 'TRẠNG THÁI',
       key: 'status',
       render: (tx) => {
-        if (tx.status === 'COMPLETED') return <span className="badge badge-green">Hoàn thành</span>;
-        if (tx.status === 'PENDING') return <span className="badge badge-yellow">Đang xử lý</span>;
+        const st = tx.status || 'COMPLETED';
+        if (st === 'COMPLETED') return <span className="badge badge-green">Hoàn thành</span>;
+        if (st === 'PENDING') return <span className="badge badge-yellow">Đang xử lý</span>;
         return <span className="badge badge-red">Thất bại</span>;
       },
     },
@@ -154,12 +164,14 @@ export default function Transactions() {
         </button>
       </div>
 
-      {/* 3 Top Stat Cards matching screenshot 5 */}
+      {/* 3 Top Stat Cards tính toán động từ CSDL thật */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="admin-card p-4 flex items-center justify-between border-l-4 border-brand-500">
           <div>
             <span className="text-xs text-muted font-medium block">Tổng giao dịch</span>
-            <span className="text-xl font-black text-gray-900 mt-1 block">1.245 GD</span>
+            <span className="text-xl font-black text-gray-900 mt-1 block">
+              {totalTxCount.toLocaleString('vi-VN')} GD
+            </span>
           </div>
           <div className="p-2.5 rounded-xl bg-brand-50 text-brand-600">
             <ArrowLeftRight size={20} />
@@ -169,7 +181,9 @@ export default function Transactions() {
         <div className="admin-card p-4 flex items-center justify-between border-l-4 border-emerald-500">
           <div>
             <span className="text-xs text-muted font-medium block">Tổng thu nhập</span>
-            <span className="text-xl font-black text-emerald-600 mt-1 block">+587.320.000 đ</span>
+            <span className="text-xl font-black text-emerald-600 mt-1 block">
+              +{fmtMoney(totalIncome)}
+            </span>
           </div>
           <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
             <TrendingUp size={20} />
@@ -179,7 +193,9 @@ export default function Transactions() {
         <div className="admin-card p-4 flex items-center justify-between border-l-4 border-rose-500">
           <div>
             <span className="text-xs text-muted font-medium block">Tổng chi tiêu</span>
-            <span className="text-xl font-black text-rose-600 mt-1 block">-452.110.000 đ</span>
+            <span className="text-xl font-black text-rose-600 mt-1 block">
+              -{fmtMoney(totalExpense)}
+            </span>
           </div>
           <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600">
             <TrendingDown size={20} />

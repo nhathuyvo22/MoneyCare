@@ -38,6 +38,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<Transaction> getAllTransactions() {
+        if (currentUserService.isAdmin()) {
+            return transactionRepository.findAll();
+        }
         return transactionRepository.findByUserId(currentUserService.getUserId());
     }
 
@@ -49,6 +52,11 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction getTransactionById(Long id) {
+        if (currentUserService.isAdmin()) {
+            return transactionRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Khong tim thay Transaction"));
+        }
         return transactionRepository.findByIdAndUserId(id, currentUserService.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Khong tim thay Transaction"));
@@ -57,8 +65,14 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Transaction createTransaction(Transaction transaction) {
         Long userId = currentUserService.getUserId();
-        transaction.setUserId(userId);
-        Account account = accountRepository.findByIdAndUserId(transaction.getAccountId(), userId)
+        if (transaction.getUserId() == null || !currentUserService.isAdmin()) {
+            transaction.setUserId(userId);
+        } else {
+            userId = transaction.getUserId();
+        }
+        final Long effectiveUserId = userId;
+        Account account = accountRepository.findById(transaction.getAccountId())
+                .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(effectiveUserId))
                 .orElseThrow(() -> new BadRequestException("Account ID khong ton tai"));
         if (transaction.getType() == null) {
             throw new BadRequestException("Loai giao dich khong duoc de trong");
@@ -67,13 +81,14 @@ public class TransactionServiceImpl implements TransactionService {
             if (transaction.getTargetAccountId() == null) {
                 throw new BadRequestException("Chuyen tien phai co tai khoan dich");
             }
-            Account target = accountRepository.findByIdAndUserId(transaction.getTargetAccountId(), userId)
+            Account target = accountRepository.findById(transaction.getTargetAccountId())
+                    .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(effectiveUserId))
                     .orElseThrow(() -> new BadRequestException("Tai khoan dich khong ton tai"));
             if (target.getId().equals(account.getId())) {
                 throw new BadRequestException("Tai khoan dich khong hop le");
             }
         } else {
-            validateCategory(transaction.getCategoryId(), userId);
+            validateCategory(transaction.getCategoryId(), effectiveUserId);
         }
         if (transaction.getAmount() == null || transaction.getAmount().signum() <= 0) {
             throw new BadRequestException("So tien phai lon hon 0");
@@ -86,7 +101,8 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setCreatedAt(LocalDateTime.now());
         Transaction saved = transactionRepository.save(transaction);
         if (saved.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
-            Account target = accountRepository.findByIdAndUserId(saved.getTargetAccountId(), userId)
+            Account target = accountRepository.findById(saved.getTargetAccountId())
+                    .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(effectiveUserId))
                     .orElseThrow(() -> new BadRequestException("Tai khoan dich khong ton tai"));
             if (account.getBalance().compareTo(saved.getAmount()) < 0) {
                 throw new BadRequestException("So du tai khoan nguon khong du");
@@ -105,17 +121,17 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Transaction updateTransaction(Long id, Transaction newData) {
         Transaction existing = getTransactionById(id);
-        Long userId = currentUserService.getUserId();
-        Account oldSource = accountRepository.findByIdAndUserId(existing.getAccountId(), userId)
+        Long userId = existing.getUserId();
+        Account oldSource = accountRepository.findById(existing.getAccountId())
+                .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Transaction account is invalid"));
-        Account oldTarget = existing.getTargetAccountId() == null ? null
-                : accountRepository.findByIdAndUserId(existing.getTargetAccountId(), userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Transaction target account is invalid"));
 
-        // Hoan tac giao dich cu trong cung transaction
         if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
             oldSource.adjustBalance(existing.getAmount());
-            if (oldTarget != null) {
+            if (existing.getTargetAccountId() != null) {
+                Account oldTarget = accountRepository.findById(existing.getTargetAccountId())
+                        .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Old target account is invalid"));
                 oldTarget.adjustBalance(existing.getAmount().negate());
                 accountRepository.save(oldTarget);
             }
@@ -124,69 +140,74 @@ public class TransactionServiceImpl implements TransactionService {
         }
         accountRepository.save(oldSource);
 
-        Account newSource = accountRepository.findByIdAndUserId(newData.getAccountId(), userId)
-                .orElseThrow(() -> new BadRequestException("Account ID khong ton tai"));
-        if (newData.getType() == null || newData.getAmount() == null || newData.getAmount().signum() <= 0) {
-            throw new BadRequestException("Loai giao dich hop le va so tien phai lon hon 0");
+        Long effectiveUserId = userId;
+        Account newSource = accountRepository.findById(newData.getAccountId() != null ? newData.getAccountId() : existing.getAccountId())
+                .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(effectiveUserId))
+                .orElseThrow(() -> new BadRequestException("Tai khoan moi khong ton tai"));
+
+        if (newData.getType() != null) existing.setType(newData.getType());
+        if (newData.getAmount() != null) {
+            if (newData.getAmount().signum() <= 0) throw new BadRequestException("So tien phai lon hon 0");
+            existing.setAmount(newData.getAmount());
         }
-        Account newTarget = null;
-        if (newData.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
-            if (newData.getTargetAccountId() == null) throw new BadRequestException("Chuyen tien phai co tai khoan dich");
-            newTarget = accountRepository.findByIdAndUserId(newData.getTargetAccountId(), userId)
+        if (newData.getAccountId() != null) existing.setAccountId(newData.getAccountId());
+        if (newData.getCategoryId() != null) {
+            validateCategory(newData.getCategoryId(), effectiveUserId);
+            existing.setCategoryId(newData.getCategoryId());
+        }
+        if (newData.getDescription() != null) existing.setDescription(newData.getDescription());
+        if (newData.getTransactionDate() != null) existing.setTransactionDate(newData.getTransactionDate());
+
+        if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
+            Long targetId = newData.getTargetAccountId() != null ? newData.getTargetAccountId() : existing.getTargetAccountId();
+            if (targetId == null) throw new BadRequestException("Chuyen tien phai co tai khoan dich");
+            Account newTarget = accountRepository.findById(targetId)
+                    .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(effectiveUserId))
                     .orElseThrow(() -> new BadRequestException("Tai khoan dich khong ton tai"));
             if (newTarget.getId().equals(newSource.getId())) {
                 throw new BadRequestException("Tai khoan dich khong hop le");
             }
-        } else {
-            validateCategory(newData.getCategoryId(), userId);
-        }
-
-        existing.setUserId(userId);
-        existing.setAccountId(newData.getAccountId());
-        existing.setTargetAccountId(newData.getTargetAccountId());
-        existing.setCategoryId(newData.getCategoryId());
-        existing.setPaymentMethodId(newData.getPaymentMethodId());
-        existing.setTitle(newData.getTitle() == null ? "Giao dich" : newData.getTitle());
-        existing.setAmount(newData.getAmount());
-        existing.setType(newData.getType());
-        existing.setDescription(newData.getDescription());
-        existing.setTransactionDate(newData.getTransactionDate() == null ? LocalDateTime.now() : newData.getTransactionDate());
-        existing.setImage(newData.getImage());
-
-        Transaction saved = transactionRepository.save(existing);
-        if (saved.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
-            if (newSource.getBalance().compareTo(saved.getAmount()) < 0) {
+            if (newSource.getBalance().compareTo(existing.getAmount()) < 0) {
                 throw new BadRequestException("So du tai khoan nguon khong du");
             }
-            newSource.adjustBalance(saved.getAmount().negate());
-            newTarget.adjustBalance(saved.getAmount());
+            newSource.adjustBalance(existing.getAmount().negate());
+            newTarget.adjustBalance(existing.getAmount());
             accountRepository.save(newSource);
             accountRepository.save(newTarget);
+            existing.setTargetAccountId(targetId);
         } else {
-            newSource.adjustBalance(saved.getSignedAmount());
+            newSource.adjustBalance(existing.getSignedAmount());
             accountRepository.save(newSource);
+            existing.setTargetAccountId(null);
         }
-        return saved;
+
+        return transactionRepository.save(existing);
     }
 
     @Override
     public void deleteTransaction(Long id) {
         Transaction existing = getTransactionById(id);
-        Long userId = currentUserService.getUserId();
-        Account source = accountRepository.findByIdAndUserId(existing.getAccountId(), userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Transaction account is invalid"));
-        if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
-            source.adjustBalance(existing.getAmount());
-            if (existing.getTargetAccountId() != null) {
-                Account target = accountRepository.findByIdAndUserId(existing.getTargetAccountId(), userId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Transaction target account is invalid"));
-                target.adjustBalance(existing.getAmount().negate());
-                accountRepository.save(target);
+        Long userId = existing.getUserId();
+        Account source = accountRepository.findById(existing.getAccountId())
+                .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
+                .orElse(null);
+        if (source != null) {
+            if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
+                source.adjustBalance(existing.getAmount());
+                if (existing.getTargetAccountId() != null) {
+                    Account target = accountRepository.findById(existing.getTargetAccountId())
+                            .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
+                            .orElse(null);
+                    if (target != null) {
+                        target.adjustBalance(existing.getAmount().negate());
+                        accountRepository.save(target);
+                    }
+                }
+            } else {
+                source.adjustBalance(existing.getSignedAmount().negate());
             }
-        } else {
-            source.adjustBalance(existing.getSignedAmount().negate());
+            accountRepository.save(source);
         }
-        accountRepository.save(source);
         transactionRepository.delete(existing);
     }
 
@@ -196,9 +217,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
         var category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new BadRequestException("Danh muc khong ton tai"));
-        if (category.getUserId() != null && !category.getUserId().equals(userId)) {
+        if (category.getUserId() != null && !currentUserService.isAdmin() && !category.getUserId().equals(userId)) {
             throw new BadRequestException("Danh muc khong hop le");
         }
     }
-
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useApp } from './context/AppContext'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
@@ -36,10 +36,20 @@ function ScreenContent({ screen, onAddTx }) {
 }
 
 export default function App() {
-  const { screen, user, token, toasts, isAdmin, appMode } = useApp()
+  const { screen, user, token, toasts, isAdmin, appMode, setAppMode, toast } = useApp()
   const [showAddTx, setShowAddTx] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [authTab, setAuthTab] = useState('login')
+
+  // Security Route Guard: Nếu không phải Admin mà appMode là admin thì cưỡng chế đá về User
+  useEffect(() => {
+    if (user && !isAdmin && appMode === 'admin') {
+      setAppMode('user')
+      if (toast) {
+        toast('Truy cập bị từ chối (403 Forbidden): Bạn không có quyền quản trị!', 'error')
+      }
+    }
+  }, [user, isAdmin, appMode, setAppMode, toast])
 
   const openAuth = (tab = 'login') => {
     setAuthTab(tab)

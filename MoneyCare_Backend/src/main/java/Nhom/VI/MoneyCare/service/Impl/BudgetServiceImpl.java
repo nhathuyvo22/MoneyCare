@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +37,9 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public List<Budget> getAllBudgets() {
+        if (currentUserService.isAdmin()) {
+            return budgetRepository.findAll();
+        }
         return budgetRepository.findByUserId(currentUserService.getUserId());
     }
 
@@ -49,6 +51,11 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public Budget getBudgetById(Long id) {
+        if (currentUserService.isAdmin()) {
+            return budgetRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Khong tim thay Budget"));
+        }
         return budgetRepository.findByIdAndUserId(id, currentUserService.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Khong tim thay Budget"));
@@ -56,7 +63,9 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public Budget createBudget(Budget budget) {
-        budget.setUserId(currentUserService.getUserId());
+        if (budget.getUserId() == null || !currentUserService.isAdmin()) {
+            budget.setUserId(currentUserService.getUserId());
+        }
         if (budget.getBudgetName() == null || budget.getBudgetName().isBlank()) {
             throw new BadRequestException("Ten ngan sach khong duoc de trong");
         }
@@ -88,28 +97,25 @@ public class BudgetServiceImpl implements BudgetService {
     @Override
     public List<BudgetSummary> getSummariesByUserId(Long userId) {
         currentUserService.requireCurrentUser(userId);
+        List<Budget> budgets = budgetRepository.findByUserId(userId);
+        List<Transaction> allUserTransactions = transactionRepository.findByUserId(userId);
         List<BudgetSummary> summaries = new ArrayList<>();
-        for (Budget budget : getBudgetsByUserId(userId)) {
-            summaries.add(calculateSummary(budget));
+
+        for (Budget budget : budgets) {
+            LocalDateTime start = budget.getStartDate().atStartOfDay();
+            LocalDateTime end = budget.getEndDate().atTime(23, 59, 59);
+
+            BigDecimal spent = allUserTransactions.stream()
+                    .filter(t -> t.getType() == CategoryType.EXPENSE
+                            && t.getTransactionDate() != null
+                            && !t.getTransactionDate().isBefore(start)
+                            && !t.getTransactionDate().isAfter(end))
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            summaries.add(new BudgetSummary(budget, spent));
         }
+
         return summaries;
-    }
-
-    // Tinh "Da chi / Con lai" cho MOT ngan sach, dua tren cac Transaction loai EXPENSE
-    // cua dung user do, co transaction_date nam trong [start_date, end_date]
-    private BudgetSummary calculateSummary(Budget budget) {
-        BigDecimal spent = BigDecimal.ZERO;
-        List<Transaction> allTransactions = transactionRepository.findByUserId(budget.getUserId());
-
-        for (Transaction transaction : allTransactions) {
-            boolean isExpense = transaction.getType() == CategoryType.EXPENSE;
-            LocalDate transactionDate = transaction.getTransactionDate().toLocalDate();
-            boolean inRange = budget.isDateInRange(transactionDate);
-
-            if (isExpense && inRange) {
-                spent = spent.add(transaction.getAmount());
-            }
-        }
-        return new BudgetSummary(budget, spent);
     }
 }

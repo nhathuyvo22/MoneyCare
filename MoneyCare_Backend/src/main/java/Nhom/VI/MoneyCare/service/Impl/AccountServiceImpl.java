@@ -31,6 +31,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> getAllAccounts() {
+        if (currentUserService.isAdmin()) {
+            return accountRepository.findAll();
+        }
         return accountRepository.findByUserId(currentUserService.getUserId());
     }
 
@@ -42,6 +45,11 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account getAccountById(Long id) {
+        if (currentUserService.isAdmin()) {
+            return accountRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Khong tim thay Account"));
+        }
         return accountRepository.findByIdAndUserId(id, currentUserService.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Khong tim thay Account"));
@@ -52,7 +60,9 @@ public class AccountServiceImpl implements AccountService {
         if (account.getAccountName() == null || account.getAccountName().isBlank()) {
             throw new BadRequestException("Ten tai khoan khong duoc de trong");
         }
-        account.setUserId(currentUserService.getUserId());
+        if (account.getUserId() == null || !currentUserService.isAdmin()) {
+            account.setUserId(currentUserService.getUserId());
+        }
         if (account.getBalance() == null) account.setBalance(BigDecimal.ZERO);
         if (account.getOpeningBalance() == null) account.setOpeningBalance(account.getBalance());
         if (account.getAccountTypeId() == null) {
@@ -79,6 +89,7 @@ public class AccountServiceImpl implements AccountService {
         }
         if (newData.getCurrency() != null) existing.setCurrency(newData.getCurrency());
         if (newData.getDescription() != null) existing.setDescription(newData.getDescription());
+        if (newData.getBalance() != null) existing.setBalance(newData.getBalance());
         return accountRepository.save(existing);
     }
 
@@ -87,6 +98,7 @@ public class AccountServiceImpl implements AccountService {
         Account existing = getAccountById(id);
         accountRepository.delete(existing);
     }
+
     private String normalizeAccountType(String value) {
         if (value == null || value.isBlank()) return "TIEN_MAT";
         return switch (value.trim().toUpperCase().replace('-', '_').replace(' ', '_')) {
@@ -97,5 +109,4 @@ public class AccountServiceImpl implements AccountService {
             default -> value.trim().toUpperCase();
         };
     }
-
 }
