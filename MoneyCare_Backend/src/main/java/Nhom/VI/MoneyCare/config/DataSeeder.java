@@ -188,6 +188,7 @@ public class DataSeeder implements CommandLineRunner {
                 Budget b = new Budget();
                 b.setUserId(u.getId());
                 b.setBudgetName(budgetNames[i]);
+                b.setCategoryId(categories.get(i % categories.size()).getId());
                 b.setStartDate(start);
                 b.setEndDate(end);
                 b.setAmount(new BigDecimal((rand.nextInt(6) + 2) * 1_000_000L));

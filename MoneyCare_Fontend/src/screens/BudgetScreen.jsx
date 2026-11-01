@@ -12,15 +12,21 @@ export default function BudgetScreen() {
   const [toDelete, setToDelete] = useState(null);
 
   const budgetWithSpent = budgets.map(b => {
+    const limit = b.amount || b.limitAmount || 0;
+    const cat = categories.find(c => c.id === b.categoryId);
     const spent = transactions
-      .filter(t => t.categoryId === b.categoryId && txType(t.type) === 'expense')
-      .reduce((s, t) => s + t.amount, 0);
-    const pct = b.limitAmount ? Math.min(100, Math.round((spent / b.limitAmount) * 100)) : 0;
-    const left = Math.max(0, b.limitAmount - spent);
-    return { ...b, spent, pct, left };
+      .filter(t => {
+        const isExpense = txType(t.type) === 'expense';
+        const matchesCategory = b.categoryId ? Number(t.categoryId) === Number(b.categoryId) : true;
+        return isExpense && matchesCategory;
+      })
+      .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const pct = limit ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
+    const left = Math.max(0, limit - spent);
+    return { ...b, limitAmount: limit, spent, pct, left, categoryName: cat?.categoryName || 'Tất cả danh mục' };
   });
 
-  const totalBudget = budgets.reduce((s, b) => s + (b.limitAmount || 0), 0);
+  const totalBudget = budgets.reduce((s, b) => s + (b.amount || b.limitAmount || 0), 0);
   const totalSpent  = budgetWithSpent.reduce((s, b) => s + b.spent, 0);
 
   const expCats = categories.filter(c => c.type === 'EXPENSE');
@@ -28,7 +34,6 @@ export default function BudgetScreen() {
   const validate = () => {
     const e = {};
     if (!form.budgetName.trim()) e.budgetName = 'Nhập tên ngân sách';
-    if (!form.categoryId)        e.categoryId = 'Chọn danh mục';
     const lim = parseInt(form.limitAmount.replace(/\D/g, ''));
     if (!lim || lim <= 0)        e.limitAmount = 'Nhập hạn mức hợp lệ';
     setErrors(e);
@@ -44,8 +49,8 @@ export default function BudgetScreen() {
     const end   = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
     await addBudget({
       budgetName: form.budgetName,
-      categoryId: Number(form.categoryId),
-      limitAmount: lim,
+      categoryId: form.categoryId ? Number(form.categoryId) : null,
+      amount: lim,
       startDate: start,
       endDate: end,
     });
@@ -93,7 +98,12 @@ export default function BudgetScreen() {
               <div key={b.id}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{b.budgetName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text-primary)' }}>{b.budgetName}</span>
+                      <span className="badge" style={{ fontSize: '0.72rem', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                        {b.categoryName}
+                      </span>
+                    </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       Đã chi: {hideBalance ? '••••' : fmt(b.spent)} / Hạn mức: {hideBalance ? '••••' : fmt(b.limitAmount)}
                     </div>
@@ -146,7 +156,7 @@ export default function BudgetScreen() {
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Danh mục chi tiêu</label>
                   <select className={`form-control${errors.categoryId ? ' error' : ''}`} value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}>
-                    <option value="">-- Chọn danh mục --</option>
+                    <option value="">-- Tất cả danh mục chi tiêu --</option>
                     {expCats.map(c => <option key={c.id} value={c.id}>{c.categoryName}</option>)}
                   </select>
                   {errors.categoryId && <div className="form-error">{errors.categoryId}</div>}

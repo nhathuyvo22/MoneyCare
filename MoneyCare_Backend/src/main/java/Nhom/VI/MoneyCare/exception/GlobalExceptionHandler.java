@@ -52,7 +52,45 @@ public class GlobalExceptionHandler {
             DataIntegrityViolationException exception,
             HttpServletRequest request
     ) {
-        return buildResponse(HttpStatus.CONFLICT, "Du lieu vi pham rang buoc (vi du: trung email)", request);
+        String detail = extractConstraintDetail(exception);
+        return buildResponse(HttpStatus.CONFLICT, detail, request);
+    }
+
+    /**
+     * Phân tích root cause của DataIntegrityViolationException để trả message rõ ràng hơn.
+     */
+    private String extractConstraintDetail(DataIntegrityViolationException ex) {
+        String rootMsg = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : (ex.getMessage() != null ? ex.getMessage() : "");
+        String lower = rootMsg.toLowerCase();
+
+        // Trùng giá trị UNIQUE (VD: Duplicate entry 'xxx' for key 'email')
+        if (lower.contains("duplicate entry") || lower.contains("unique")) {
+            if (lower.contains("email")) return "Email da ton tai trong he thong";
+            if (lower.contains("ten_vai_tro")) return "Ten vai tro da ton tai";
+            if (lower.contains("ten_loai")) return "Ten loai tai khoan da ton tai";
+            if (lower.contains("ten_phuong_thuc")) return "Ten phuong thuc da ton tai";
+            // Trả tên key nếu biết
+            return "Du lieu bi trung (vi pham rang buoc UNIQUE): " + rootMsg;
+        }
+
+        // Vi phạm NOT NULL
+        if (lower.contains("cannot be null") || lower.contains("null")) {
+            return "Thieu truong bat buoc: " + rootMsg;
+        }
+
+        // Vi phạm Foreign Key
+        if (lower.contains("foreign key") || lower.contains("fk_") || lower.contains("cannot add or update a child row")) {
+            return "Du lieu tham chieu khong hop le (khoa ngoai): " + rootMsg;
+        }
+
+        // Vi phạm CHECK constraint
+        if (lower.contains("check constraint")) {
+            return "Du lieu khong thoa rang buoc kiem tra: " + rootMsg;
+        }
+
+        return "Du lieu vi pham rang buoc CSDL: " + rootMsg;
     }
 
     // Bắt lỗi chung khi không truy cập được CSDL (mất kết nối MySQL...)

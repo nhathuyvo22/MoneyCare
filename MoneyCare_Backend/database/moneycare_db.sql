@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS GiaoDich (
 CREATE TABLE IF NOT EXISTS NganSach (
   id_ngan_sach BIGINT NOT NULL AUTO_INCREMENT,
   id_nguoi_dung BIGINT NOT NULL,
+  id_danh_muc BIGINT NULL,
   ten_ngan_sach VARCHAR(100) NOT NULL,
   ngay_bat_dau DATE NOT NULL,
   ngay_ket_thuc DATE NOT NULL,
@@ -103,6 +104,7 @@ CREATE TABLE IF NOT EXISTS NganSach (
   ngay_tao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id_ngan_sach),
   CONSTRAINT fk_ngansach_nguoidung FOREIGN KEY (id_nguoi_dung) REFERENCES NguoiDung(id_nguoi_dung),
+  CONSTRAINT fk_ngansach_danhmuc FOREIGN KEY (id_danh_muc) REFERENCES DanhMuc(id_danh_muc),
   CONSTRAINT chk_ngansach_ngay CHECK (ngay_ket_thuc >= ngay_bat_dau),
   CONSTRAINT chk_ngansach_hanmuc CHECK (tong_han_muc >= 0)
 ) ENGINE=InnoDB;

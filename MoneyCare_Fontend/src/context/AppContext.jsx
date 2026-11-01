@@ -392,11 +392,11 @@ export function AppProvider({ children }) {
       } else {
         setBudgets(prev => [...prev, { ...data, id: Date.now() }]);
       }
-      toast('Đã tạo ngân sách thành công!');
+      toast('Đã tạo ngân sách thành công! 🎯');
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
     }
-  }, [isLive, token]);
+  }, [isLive, token, toast]);
 
   // ── delete budget ──
   const deleteBudget = useCallback(async (id) => {

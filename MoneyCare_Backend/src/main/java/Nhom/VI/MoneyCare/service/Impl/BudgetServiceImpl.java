@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class BudgetServiceImpl implements BudgetService {
@@ -83,6 +84,7 @@ public class BudgetServiceImpl implements BudgetService {
         Budget existing = getBudgetById(id);
         existing.setBudgetName(newData.getBudgetName());
         existing.setAmount(newData.getAmount());
+        existing.setCategoryId(newData.getCategoryId());
         existing.setStartDate(newData.getStartDate());
         existing.setEndDate(newData.getEndDate());
         return budgetRepository.save(existing);
@@ -109,7 +111,8 @@ public class BudgetServiceImpl implements BudgetService {
                     .filter(t -> t.getType() == CategoryType.EXPENSE
                             && t.getTransactionDate() != null
                             && !t.getTransactionDate().isBefore(start)
-                            && !t.getTransactionDate().isAfter(end))
+                            && !t.getTransactionDate().isAfter(end)
+                            && (budget.getCategoryId() == null || Objects.equals(t.getCategoryId(), budget.getCategoryId())))
                     .map(Transaction::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
