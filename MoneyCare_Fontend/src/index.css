@@ -438,6 +438,25 @@ body {
 .toast.success { border-left: 3px solid var(--success); }
 .toast.error   { border-left: 3px solid var(--danger);  }
 .toast.warning { border-left: 3px solid var(--warning); }
+.toast.info    { border-left: 3px solid var(--primary); }
+
+.toast-action-btn {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+.toast-action-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
 
 /* ============================================================
    STATUS PILL (BACKEND)

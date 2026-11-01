@@ -27,7 +27,7 @@ const BREADCRUMB_MAP = {
 };
 
 export default function Header({ onOpenMobile }) {
-  const { adminUser, adminScreen, setAdminScreen, exitAdminMode, doLogout, globalSearch, setGlobalSearch, syncWithBackend, loading } = useAdmin();
+  const { adminUser, adminScreen, setAdminScreen, exitAdminMode, doLogout, globalSearch, setGlobalSearch, syncWithBackend, loading, toast } = useAdmin();
   const currentTitle = BREADCRUMB_MAP[adminScreen] || 'Trang quản trị';
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -90,7 +90,10 @@ export default function Header({ onOpenMobile }) {
 
         {/* Sync Button */}
         <button
-          onClick={syncWithBackend}
+          onClick={async () => {
+            await syncWithBackend();
+            toast('Đã làm mới dữ liệu hệ thống mới nhất! 🚀');
+          }}
           disabled={loading.sync}
           className="btn-icon text-brand-600 hover:bg-brand-50 relative group"
           title="Đồng bộ lại dữ liệu với Backend"

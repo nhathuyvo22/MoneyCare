@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Shield, Database, Sun, LogIn, LogOut } from 'lucide-react';
+import { User, Shield, Database, Sun, LogIn, LogOut, Bell, Volume2, Smartphone, Sparkles, Mic } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 
 const TABS = [
-  { id: 'profile',     label: 'Hồ sơ',     Icon: User     },
-  { id: 'theme',       label: 'Giao diện',  Icon: Sun      },
-  { id: 'security',    label: 'Bảo mật',    Icon: Shield   },
-  { id: 'data',        label: 'Dữ liệu',    Icon: Database },
+  { id: 'profile',       label: 'Hồ sơ',      Icon: User       },
+  { id: 'theme',         label: 'Giao diện',   Icon: Sun        },
+  { id: 'notifications', label: 'Thông báo',  Icon: Bell       },
+  { id: 'security',      label: 'Bảo mật',     Icon: Shield     },
+  { id: 'data',          label: 'Dữ liệu',     Icon: Database   },
 ];
 
 export default function SettingsScreen() {
   const {
     user, themeMode, setThemeMode,
     doLogout, toast,
+    notifSettings, updateNotifSettings,
     transactions, accounts,
   } = useApp();
 
@@ -154,6 +156,202 @@ export default function SettingsScreen() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications & Haptic Settings */}
+      {activeTab === 'notifications' && (
+        <div className="card">
+          <div className="card-header"><span className="card-title">Cài đặt thông báo & Phản hồi</span></div>
+          <div className="card-body" style={{ maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Sound Toggle */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg)',
+              border: '1px solid var(--border)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  background: notifSettings?.sound ? 'rgba(99, 102, 241, 0.15)' : 'rgba(150, 150, 150, 0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: notifSettings?.sound ? 'var(--primary)' : 'var(--text-muted)'
+                }}>
+                  <Volume2 size={18} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    Âm thanh thông báo (Sound FX)
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Phát âm thanh Web Audio tinh tế khi thao tác thành công hoặc có lỗi
+                  </div>
+                </div>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings?.sound)}
+                  onChange={e => updateNotifSettings({ sound: e.target.checked })}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: notifSettings?.sound ? 'var(--primary)' : '#ccc',
+                  transition: '0.2s', borderRadius: 24
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: 18, width: 18, left: notifSettings?.sound ? 23 : 3, bottom: 3,
+                    backgroundColor: 'white', transition: '0.2s', borderRadius: '50%'
+                  }} />
+                </span>
+              </label>
+            </div>
+
+            {/* Haptic Toggle */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg)',
+              border: '1px solid var(--border)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  background: notifSettings?.haptic ? 'rgba(16, 185, 129, 0.15)' : 'rgba(150, 150, 150, 0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: notifSettings?.haptic ? 'var(--success)' : 'var(--text-muted)'
+                }}>
+                  <Smartphone size={18} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    Rung phản hồi (Haptic Feedback)
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Rung nhẹ trên thiết bị cảm ứng / điện thoại khi có thông báo trạng thái
+                  </div>
+                </div>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings?.haptic)}
+                  onChange={e => updateNotifSettings({ haptic: e.target.checked })}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: notifSettings?.haptic ? 'var(--success)' : '#ccc',
+                  transition: '0.2s', borderRadius: 24
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: 18, width: 18, left: notifSettings?.haptic ? 23 : 3, bottom: 3,
+                    backgroundColor: 'white', transition: '0.2s', borderRadius: '50%'
+                  }} />
+                </span>
+              </label>
+            </div>
+
+            {/* AI Voice Toggle */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg)',
+              border: '1px solid var(--border)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  background: notifSettings?.voice ? 'rgba(236, 72, 153, 0.15)' : 'rgba(150, 150, 150, 0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: notifSettings?.voice ? '#EC4899' : 'var(--text-muted)'
+                }}>
+                  <Mic size={18} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                    Giọng đọc thông báo AI (Voice Notification)
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Phát giọng đọc tiếng Việt khi thanh toán hóa đơn, nạp/rút tiền qua Web Speech API
+                  </div>
+                </div>
+              </div>
+              <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifSettings?.voice)}
+                  onChange={e => updateNotifSettings({ voice: e.target.checked })}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: notifSettings?.voice ? '#EC4899' : '#ccc',
+                  transition: '0.2s', borderRadius: 24
+                }}>
+                  <span style={{
+                    position: 'absolute', content: '""', height: 18, width: 18, left: notifSettings?.voice ? 23 : 3, bottom: 3,
+                    backgroundColor: 'white', transition: '0.2s', borderRadius: '50%'
+                  }} />
+                </span>
+              </label>
+            </div>
+
+            {/* Interactive Demo Panel */}
+            <div style={{
+              padding: '16px', borderRadius: 'var(--radius-md)',
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05))',
+              border: '1px dashed var(--primary)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: '0.86rem', color: 'var(--primary)', marginBottom: 6 }}>
+                <Sparkles size={15} /> Thử nghiệm thông báo & Action Toast
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 12px 0' }}>
+                Bấm các nút bên dưới để nghe thử âm thanh, cảm nhận rung và thử nút hành động:
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => toast('Đã thanh toán hóa đơn 500.000 đ thành công! 🎉', 'success', {
+                    voiceText: 'Tài khoản của bạn đã thanh toán thành công 500 nghìn đồng.'
+                  })}
+                >
+                  🎙️ Thử Giọng đọc AI
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => toast('Đã lưu giao dịch +500.000 đ thành công! 🎉', 'success')}
+                >
+                  🔊 Thử Thành công
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => toast('Đã xóa ngân sách!', 'warning', {
+                    action: {
+                      label: 'Hoàn tác ↩',
+                      onClick: () => toast('Đã hoàn tác khôi phục ngân sách! ✨', 'success')
+                    }
+                  })}
+                >
+                  ⚡ Thử Action (Hoàn tác)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => toast('Số dư tài khoản không đủ để giao dịch!', 'error', {
+                    action: {
+                      label: 'Thử lại ↻',
+                      onClick: () => toast('Đang kiểm tra lại số dư...', 'info')
+                    }
+                  })}
+                >
+                  ⚠️ Thử Lỗi & Thử lại
+                </button>
+              </div>
             </div>
           </div>
         </div>

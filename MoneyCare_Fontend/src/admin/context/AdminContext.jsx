@@ -192,14 +192,12 @@ export function AdminProvider({ children }) {
           details: l.description || '',
         })));
       }
-
-      toast('Đồng bộ dữ liệu thành công! 🚀');
     } catch (err) {
       console.error('Admin sync error:', err);
     } finally {
       setLoad('sync', false);
     }
-  }, [token, toast]);
+  }, [token]);
 
   // Tự động đồng bộ với backend khi vào Admin
   useEffect(() => {
@@ -521,8 +519,7 @@ export function AdminProvider({ children }) {
 
   const exitAdminMode = useCallback(() => {
     setAppMode('user');
-    toast('Đã chuyển về Giao diện Người dùng. 👤');
-  }, [setAppMode, toast]);
+  }, [setAppMode]);
 
   return (
     <AdminContext.Provider

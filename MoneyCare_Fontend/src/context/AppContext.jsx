@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import * as api from '../services/api';
+import { playNotificationSound, triggerHaptic, speakVietnamese, formatAmountToSpokenVietnamese } from '../utils/soundHaptic';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -66,14 +67,71 @@ export function AppProvider({ children }) {
   // ── balance privacy ──
   const [hideBalance, setHideBalance] = useState(false);
 
-  // ── toasts ──
+  // ── notification settings (sound, haptic, voice) ──
+  const [notifSettings, setNotifSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mc_notif_settings');
+      return saved ? JSON.parse(saved) : { sound: true, haptic: true, voice: true };
+    } catch {
+      return { sound: true, haptic: true, voice: true };
+    }
+  });
+
+  const updateNotifSettings = useCallback((newSettings) => {
+    setNotifSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      localStorage.setItem('mc_notif_settings', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // ── smart toast queue (deduplication, max 2 items, sound & haptic, action toast) ──
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
-  const toast = useCallback((msg, type = 'success') => {
+  const recentToasts = useRef([]); // Theo dõi tin nhắn gần nhất để chống trùng lặp
+
+  const toast = useCallback((msg, type = 'success', options = {}) => {
+    if (!msg) return;
+
+    // 1. Chống trùng lặp (Deduplication): Bỏ qua nếu tin nhắn giống hệt xuất hiện trong vòng 2.5s
+    const now = Date.now();
+    const isDuplicate = recentToasts.current.some(
+      r => r.msg === msg && (now - r.time) < 2500
+    );
+    if (isDuplicate) return;
+
+    recentToasts.current = [
+      ...recentToasts.current.filter(r => (now - r.time) < 3000),
+      { msg, time: now }
+    ];
+
+    // 2. Sound & Haptic Feedback theo cấu hình người dùng
+    if (notifSettings.sound) {
+      playNotificationSound(type);
+    }
+    if (notifSettings.haptic) {
+      triggerHaptic(type);
+    }
+    // 2.1. AI Voice Notification (nếu có yêu cầu đọc văn bản hoặc truyền voiceText)
+    if (notifSettings.voice && options.voiceText) {
+      speakVietnamese(options.voiceText);
+    }
+
+    // 3. Tối ưu thời gian tự ẩn: success/info 2.5s, error/warning 4s (hoặc tùy chỉnh qua options.duration)
+    const duration = options.duration || (type === 'error' || type === 'warning' ? 4000 : 2500);
     const id = ++toastId.current;
-    setToasts(prev => [...prev, { id, msg, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
-  }, []);
+    const action = options.action || null; // { label: string, onClick: function }
+
+    // 4. Giới hạn số lượng (Max queue): Tối đa 2 thông báo cùng một lúc
+    setToasts(prev => {
+      const trimmed = prev.length >= 2 ? prev.slice(-1) : prev;
+      return [...trimmed, { id, msg, type, action }];
+    });
+
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+  }, [notifSettings]);
 
   // ── admin role check ──
   // id_vai_tro = 1 là ADMIN, id_vai_tro = 2 là USER (theo bảng VaiTro trong DB)
@@ -319,13 +377,21 @@ export function AppProvider({ children }) {
           a.id === tx.accountId ? { ...a, balance: (a.balance || 0) + signedAmt } : a
         ));
       }
-      toast('Đã xóa giao dịch và cập nhật số dư.');
+      toast('Đã xóa giao dịch thành công!', 'info', {
+        action: {
+          label: 'Hoàn tác ↩',
+          onClick: async () => {
+            const { id, createdAt, updatedAt, ...rest } = tx;
+            await addTransaction(rest);
+          }
+        }
+      });
     } catch (e) {
       toast('Lỗi xóa: ' + e.message, 'error');
     } finally {
       setLoad('delTx', false);
     }
-  }, [isLive, token, syncAll]);
+  }, [isLive, token, syncAll, addTransaction, toast]);
 
   // ── add account ──
   const addAccount = useCallback(async (data) => {
@@ -372,7 +438,10 @@ export function AppProvider({ children }) {
           a.id === Number(accountId) ? { ...a, balance: (a.balance || 0) + numAmt } : a
         ));
       }
-      toast(`Nạp thành công +${numAmt.toLocaleString('vi-VN')} đ vào ${accName}! 🎉`);
+      const spokenAmt = formatAmountToSpokenVietnamese(numAmt);
+      toast(`Nạp thành công +${numAmt.toLocaleString('vi-VN')} đ vào ${accName}! 🎉`, 'success', {
+        voiceText: `Tài khoản ${accName} đã được nạp thành công ${spokenAmt}.`
+      });
       return true;
     } catch (e) {
       toast('Lỗi nạp tiền: ' + e.message, 'error');
@@ -471,7 +540,10 @@ export function AppProvider({ children }) {
           a.id === accountId ? { ...a, balance: Math.max(0, (a.balance || 0) - amount) } : a
         ));
       }
-      toast(`Đã nạp ${fmt(amount)} vào hũ tiết kiệm! 💰`);
+      const spokenAmt = formatAmountToSpokenVietnamese(amount);
+      toast(`Đã nạp ${fmt(amount)} vào hũ tiết kiệm! 💰`, 'success', {
+        voiceText: `Bạn đã nạp thành công ${spokenAmt} vào quỹ tiết kiệm.`
+      });
       return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
@@ -498,17 +570,21 @@ export function AppProvider({ children }) {
   // ── pay bill ──
   const payBill = useCallback(async (bill) => {
     try {
+      const amt = Number(bill.amount || bill.expectedAmount) || 0;
       if (isLive && token) {
-        await api.createBillPayment({ billId: bill.id, amount: bill.amount, paymentDate: new Date().toISOString() });
+        await api.createBillPayment({ billId: bill.id, amount: amt, paymentDate: new Date().toISOString() });
         await syncAll();
       } else {
         setBills(prev => prev.map(b => b.id === bill.id ? { ...b, status: 'PAID' } : b));
       }
-      toast('Đã thanh toán hóa đơn!');
+      const spokenAmt = formatAmountToSpokenVietnamese(amt);
+      toast(`Đã thanh toán hóa đơn "${bill.name || bill.billName || 'Hóa đơn'}" thành công! 🎉`, 'success', {
+        voiceText: `Tài khoản của bạn đã thanh toán thành công ${spokenAmt}.`
+      });
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
     }
-  }, [isLive, token, syncAll]);
+  }, [isLive, token, syncAll, toast]);
 
   // ── mark notification read ──
   const markNotifRead = useCallback((id) => {
@@ -553,6 +629,7 @@ export function AppProvider({ children }) {
       // ui helpers
       loading, toast,
       toasts, setToasts,
+      notifSettings, updateNotifSettings,
       fmt, txType,
     }}>
       {children}
