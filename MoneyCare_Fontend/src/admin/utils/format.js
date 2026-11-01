@@ -48,6 +48,36 @@ export function fmtDateTime(dateString) {
   }
 }
 
+// Format thoi gian tuong doi (vd: 'Dang su dung', '5 phut truoc', 'Chua tung truy cap')
+export function fmtRelativeTime(dateString) {
+  if (!dateString) return 'Chưa từng truy cập';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return 'Chưa từng truy cập';
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diffSec < 0 || diffSec <= 120) return 'Đang sử dụng';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
+    if (diffSec < 2592000) return `${Math.floor(diffSec / 86400)} ngày trước`;
+    return fmtDate(dateString);
+  } catch {
+    return 'Chưa từng truy cập';
+  }
+}
+
+// Tinh toan trang thai truy cap: ONLINE, OFFLINE, NEVER_LOGGED_IN
+export function getOnlineStatus(user) {
+  if (!user || (!user.lastSeenAt && !user.lastLoginAt)) {
+    return 'NEVER_LOGGED_IN';
+  }
+  const lastTime = user.lastSeenAt || user.lastLoginAt;
+  const d = new Date(lastTime);
+  if (isNaN(d.getTime())) return 'NEVER_LOGGED_IN';
+  const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+  return (diffSec >= 0 && diffSec <= 120) ? 'ONLINE' : 'OFFLINE';
+}
+
 // Che email: ví dụ tran***@gmail.com
 export function maskEmail(email) {
   if (!email || !email.includes('@')) return email || '—';

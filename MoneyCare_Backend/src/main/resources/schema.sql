@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS NguoiDung (
   ngay_sinh DATE,
   gioi_tinh VARCHAR(20),
   trang_thai VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+  last_seen_at DATETIME NULL,
+  last_login_at DATETIME NULL,
   ngay_tao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   ngay_cap_nhat DATETIME NULL,
   PRIMARY KEY (id_nguoi_dung),

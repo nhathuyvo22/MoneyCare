@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
-import { fmtDate, maskEmail, maskPhone, exportToCSV } from '../utils/format';
+import { fmtDate, fmtDateTime, fmtRelativeTime, getOnlineStatus, maskEmail, maskPhone, exportToCSV } from '../utils/format';
 import {
   UserPlus,
   Lock,
@@ -56,7 +56,6 @@ export default function Users() {
     e.preventDefault();
     if (!showEditModal) return;
     const payload = {
-      ...showEditModal,
       fullName: showEditModal.fullName,
       email: showEditModal.email,
       phone: showEditModal.phone,
@@ -96,7 +95,9 @@ export default function Users() {
       { label: 'Số điện thoại', key: 'phone' },
       { label: 'Ngày đăng ký', key: r => fmtDate(r.createdAt) },
       { label: 'Số tài khoản', key: 'accountsCount' },
-      { label: 'Trạng thái', key: r => r.status === 'ACTIVE' ? 'Hoạt động' : r.status === 'PENDING' ? 'Chờ xác minh' : 'Đã khóa' },
+      { label: 'Trạng thái tài khoản', key: r => r.status === 'ACTIVE' ? 'Hoạt động' : r.status === 'PENDING' ? 'Chờ xác minh' : 'Bị khóa' },
+      { label: 'Trạng thái truy cập', key: r => { const st = getOnlineStatus(r); return st === 'ONLINE' ? 'Online' : st === 'OFFLINE' ? 'Offline' : 'Chưa từng truy cập'; } },
+      { label: 'Lần truy cập cuối', key: r => fmtRelativeTime(r.lastSeenAt || r.lastLoginAt) },
       { label: 'Vai trò', key: 'role' },
     ];
     exportToCSV('Danh_sach_nguoi_dung_MoneyCare', headers, filteredUsers);
@@ -162,12 +163,55 @@ export default function Users() {
       ),
     },
     {
-      label: 'TRẠNG THÁI',
+      label: 'TÀI KHOẢN',
       key: 'status',
       render: (u) => {
         if (u.status === 'ACTIVE') return <span className="badge badge-green">Hoạt động</span>;
         if (u.status === 'PENDING') return <span className="badge badge-yellow">Chờ xác minh</span>;
-        return <span className="badge badge-red">Đã khóa</span>;
+        return <span className="badge badge-red">Bị khóa</span>;
+      },
+    },
+    {
+      label: 'TRUY CẬP',
+      key: 'onlineStatus',
+      render: (u) => {
+        const st = getOnlineStatus(u);
+        if (st === 'ONLINE') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Online
+            </span>
+          );
+        }
+        if (st === 'OFFLINE') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+              <span className="w-2 h-2 rounded-full bg-gray-400" />
+              Offline
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200">
+            <span className="w-2 h-2 rounded-full bg-slate-300" />
+            Chưa từng truy cập
+          </span>
+        );
+      },
+    },
+    {
+      label: 'LẦN TRUY CẬP CUỐI',
+      key: 'lastSeenAt',
+      sortable: true,
+      render: (u) => {
+        const rel = fmtRelativeTime(u.lastSeenAt || u.lastLoginAt);
+        const full = u.lastSeenAt || u.lastLoginAt ? fmtDateTime(u.lastSeenAt || u.lastLoginAt) : null;
+        return (
+          <span className="text-xs text-gray-600" title={full || undefined}>
+            {rel}
+          </span>
+        );
       },
     },
     {

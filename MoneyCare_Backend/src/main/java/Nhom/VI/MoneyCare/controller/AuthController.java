@@ -24,12 +24,15 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final Nhom.VI.MoneyCare.service.UserService userService;
 
     public AuthController(AuthenticationManager authenticationManager, JwtService jwtService,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          Nhom.VI.MoneyCare.service.UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     /** Dang nhap bang email/mat khau, tra ve JWT access token. */
@@ -47,6 +50,7 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoac mat khau khong dung / tai khoan bi khoa");
         }
         UserDetails principal = (UserDetails) authentication.getPrincipal();
+        userService.recordLogin(principal.getUsername());
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Tai khoan khong hop le"));
 
@@ -56,6 +60,15 @@ public class AuthController {
         result.put("expiresIn", jwtService.getExpirationSeconds());
         result.put("user", safeUser(user, authentication));
         return result;
+    }
+
+    /** Dang xuat: ghi nhan offline ngay */
+    @PostMapping("/logout")
+    public Map<String, Object> logout(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            userService.recordLogout(authentication.getName());
+        }
+        return Map.of("message", "Dang xuat thanh cong");
     }
 
     /** Tra ve thong tin tai khoan dang duoc xac thuc boi JWT. */

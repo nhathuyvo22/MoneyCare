@@ -57,6 +57,9 @@ async function request(endpoint, method = 'GET', body = null) {
 export const login = (email, password) =>
   request('/api/auth/login', 'POST', { email, password });
 
+export const logout = () =>
+  request('/api/auth/logout', 'POST').catch(() => {});
+
 export const register = (data) =>
   request('/api/users', 'POST', data);
 
@@ -68,6 +71,8 @@ export const getUserById     = (id)       => request(`/api/users/${id}`);
 export const createUser      = (data)     => request('/api/users', 'POST', data);
 export const updateUser      = (id, data) => request(`/api/users/${id}`, 'PUT', data);
 export const deleteUser      = (id)       => request(`/api/users/${id}`, 'DELETE');
+export const updateUserStatus = (id, status) => request('/api/users/' + id + '/status', 'PATCH', { status });
+export const sendHeartbeat   = ()         => request('/api/users/heartbeat', 'POST');
 
 // ── ACTIVITY LOGS ────────────────────────────────────────────────
 export const getActivityLogs = ()         => request('/api/activity-logs');

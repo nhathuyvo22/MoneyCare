@@ -202,6 +202,17 @@ export function AppProvider({ children }) {
 
   useEffect(() => { probeBackend(); }, [probeBackend]);
 
+  // Định kỳ gửi Heartbeat mỗi 45 giây khi đã đăng nhập
+  useEffect(() => {
+    if (!token) return;
+    // Gửi ngay 1 lần
+    api.sendHeartbeat().catch(() => {});
+    const interval = setInterval(() => {
+      api.sendHeartbeat().catch(() => {});
+    }, 45000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   // handle unauthorized event
   useEffect(() => {
     const handler = () => {
@@ -318,7 +329,8 @@ export function AppProvider({ children }) {
   }, [doLogin, toast]);
 
   // ── logout ──
-  const doLogout = useCallback(() => {
+  const doLogout = useCallback(async () => {
+    try { await api.logout(); } catch (e) { /* ignore */ }
     localStorage.removeItem('moneycare_jwt');
     localStorage.removeItem('moneycare_user');
     localStorage.removeItem('mc_screen');

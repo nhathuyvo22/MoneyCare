@@ -41,6 +41,12 @@ public class User {
     @Column(name="trang_thai", nullable=false, length=20)
     private String status = "ACTIVE";
 
+    @Column(name="last_seen_at")
+    private LocalDateTime lastSeenAt;
+
+    @Column(name="last_login_at")
+    private LocalDateTime lastLoginAt;
+
     @Column(name="ngay_tao", nullable=false)
     private LocalDateTime createdAt;
 

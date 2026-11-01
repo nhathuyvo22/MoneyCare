@@ -80,6 +80,48 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updateHeartbeat(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            user.setLastSeenAt(LocalDateTime.now());
+            userRepository.save(user);
+        });
+    }
+
+    @Override
+    public void recordLogin(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            LocalDateTime now = LocalDateTime.now();
+            user.setLastLoginAt(now);
+            user.setLastSeenAt(now);
+            userRepository.save(user);
+        });
+    }
+
+    @Override
+    public void recordLogout(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            // Dua last_seen_at ve 3 phut truoc de he thong nhan dien ngay la OFFLINE (> 2 phut)
+            user.setLastSeenAt(LocalDateTime.now().minusMinutes(3));
+            userRepository.save(user);
+        });
+    }
+
+    @Override
+    public User updateUserStatus(Long id, String status) {
+        if (status == null || status.isBlank()) {
+            throw new BadRequestException("Trang thai khong hop le");
+        }
+        String norm = status.trim().toUpperCase();
+        if (!List.of("ACTIVE", "LOCKED", "PENDING").contains(norm)) {
+            throw new BadRequestException("Trang thai khong hop le: " + status);
+        }
+        User existing = getUserById(id);
+        existing.setStatus(norm);
+        existing.setUpdatedAt(LocalDateTime.now());
+        return userRepository.save(existing);
+    }
+
+    @Override
     public void deleteUser(Long id) {
         User existing = getUserById(id);
         userRepository.delete(existing);

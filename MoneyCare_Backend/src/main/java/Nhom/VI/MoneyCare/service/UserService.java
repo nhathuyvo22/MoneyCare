@@ -18,4 +18,12 @@ public interface UserService {
     User updateUser(Long id, User user);
 
     void deleteUser(Long id);
+
+    void updateHeartbeat(String email);
+
+    void recordLogin(String email);
+
+    void recordLogout(String email);
+
+    User updateUserStatus(Long id, String status);
 }

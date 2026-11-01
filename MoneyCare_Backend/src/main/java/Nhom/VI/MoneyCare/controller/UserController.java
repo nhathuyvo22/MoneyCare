@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -52,6 +54,22 @@ public class UserController {
     @PutMapping("/{id}")
     public User updateUser(@PathVariable Long id, @RequestBody User user) {
         return service.updateUser(id, user);
+    }
+
+    // Heartbeat cap nhat trang thai online (POST) - http://localhost:8080/api/users/heartbeat
+    @PostMapping("/heartbeat")
+    public Map<String, Object> heartbeat(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            service.updateHeartbeat(authentication.getName());
+        }
+        return Map.of("status", "OK", "timestamp", System.currentTimeMillis());
+    }
+
+    // Cap nhat rieng trang thai tai khoan (PATCH) - http://localhost:8080/api/users/{id}/status
+    @PatchMapping("/{id}/status")
+    public User updateUserStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String status = body != null ? body.get("status") : null;
+        return service.updateUserStatus(id, status);
     }
 
     // Xoa (DELETE) - http://localhost:8080/api/users/{id}

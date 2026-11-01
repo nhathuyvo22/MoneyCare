@@ -90,6 +90,8 @@ export function AdminProvider({ children }) {
           // id_vai_tro = 1 -> ADMIN, id_vai_tro = 2 -> USER (theo bảng VaiTro trong DB)
           role: item.roleId === 1 ? 'ADMIN' : 'USER',
           status: item.status || 'ACTIVE',
+          lastSeenAt: item.lastSeenAt || null,
+          lastLoginAt: item.lastLoginAt || null,
           accountsCount: item.accountsCount || 0,
           avatar: null, // Dùng initials avatar, không dùng ảnh mẫu bên ngoài
           createdAt: item.createdAt ? String(item.createdAt).split('T')[0] : null,
@@ -203,6 +205,11 @@ export function AdminProvider({ children }) {
   useEffect(() => {
     if (token) {
       syncWithBackend();
+      // Định kỳ đồng bộ trạng thái người dùng (heartbeat / online) mỗi 30s
+      const interval = setInterval(() => {
+        syncWithBackend();
+      }, 30000);
+      return () => clearInterval(interval);
     }
   }, [token, syncWithBackend]);
 
@@ -248,10 +255,24 @@ export function AdminProvider({ children }) {
     }
   }, [logActivity, toast, syncWithBackend]);
 
+  const setUserStatus = useCallback(async (userId, newStatus, userFullName = "Người dùng") => {
+    try {
+      await api.updateUserStatus(userId, newStatus);
+      const statusLabel = newStatus === "ACTIVE" ? "Hoạt động" : newStatus === "LOCKED" ? "Khóa" : "Chờ xác minh";
+      logActivity("Cập nhật trạng thái", `${userFullName} -> ${statusLabel}`, "SUCCESS");
+      toast(`Đã cập nhật trạng thái tài khoản thành ${statusLabel}!`);
+      await syncWithBackend();
+      return true;
+    } catch (e) {
+      toast("Lỗi đổi trạng thái tài khoản: " + e.message, "error");
+      return false;
+    }
+  }, [logActivity, toast, syncWithBackend]);
+
   const toggleUserLock = useCallback(async (u) => {
     try {
       const next = u.status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
-      await api.updateUser(u.id, { ...u, status: next });
+      await api.updateUserStatus(u.id, next);
       logActivity(next === 'LOCKED' ? 'Khóa người dùng' : 'Mở khóa người dùng', u.fullName, 'SUCCESS');
       toast(`Đã ${next === 'LOCKED' ? 'khóa' : 'mở khóa'} tài khoản thành công!`);
       await syncWithBackend();
@@ -547,6 +568,7 @@ export function AdminProvider({ children }) {
         addUser,
         updateUser,
         deleteUser,
+        setUserStatus,
         toggleUserLock,
         // CRUD Accounts
         addAccount,
