@@ -155,14 +155,13 @@ export default function InterestCalculatorScreen() {
         icon: 'PiggyBank',
         color: '#E83E8C',
       });
+      if (!createdGoal) return;
 
       // 2. Trích tiền từ ví và ghi nhận giao dịch nạp vào sổ tiết kiệm
-      if (createdGoal && (createdGoal.id || typeof createdGoal === 'object')) {
-        const goalId = createdGoal.id || (typeof createdGoal === 'number' ? createdGoal : null);
-        if (goalId) {
-          await depositSavings(goalId, Number(depositAmount), Number(selectedAccount.id));
-        }
-      }
+      const goalId = createdGoal.id || (typeof createdGoal === 'number' ? createdGoal : null);
+      if (!goalId) throw new Error('Không nhận được mã mục tiêu tiết kiệm vừa tạo.');
+      const deposited = await depositSavings(goalId, Number(depositAmount), Number(selectedAccount.id));
+      if (!deposited) return;
 
       toast(`Đã gửi ${fmt(depositAmount)} vào sổ tiết kiệm từ ví "${selectedAccount.accountName}" thành công! 🎉`);
       setTimeout(() => setScreen('goals'), 800);

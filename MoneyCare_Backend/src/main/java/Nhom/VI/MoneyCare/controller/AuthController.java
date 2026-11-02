@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -46,8 +47,11 @@ public class AuthController {
         try {
             authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email().trim(), request.password()));
+        } catch (DisabledException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.LOCKED, "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
         } catch (AuthenticationException ex) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoac mat khau khong dung / tai khoan bi khoa");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email hoac mat khau khong chinh xac");
         }
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         userService.recordLogin(principal.getUsername());

@@ -140,6 +140,9 @@ export function AdminProvider({ children }) {
         setCategories(c.value.map((item, idx) => ({
           ...item,
           code: `DM${String(item.id || idx + 1).padStart(3, '0')}`,
+          ownerName: item.userId
+            ? userMap[item.userId] || `Người dùng #${item.userId}`
+            : 'Dùng chung',
           txCount: item.txCount || 0,
         })));
       }
@@ -326,7 +329,14 @@ export function AdminProvider({ children }) {
   const toggleAccountStatus = useCallback(async (a) => {
     try {
       const next = a.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-      await api.updateAccount(a.id, { ...a, status: next });
+      await api.updateAccount(a.id, {
+        accountName: a.accountName,
+        accountTypeId: a.accountTypeId,
+        balance: a.balance,
+        currency: a.currency,
+        description: a.description,
+        status: next,
+      });
       logActivity('Đổi trạng thái tài khoản', `${a.accountName} -> ${next}`, 'SUCCESS');
       toast('Đã cập nhật trạng thái tài khoản!');
       await syncWithBackend();
@@ -366,9 +376,9 @@ export function AdminProvider({ children }) {
 
   const deleteCategory = useCallback(async (id) => {
     try {
-      await api.deleteCategory(id);
-      logActivity('Xóa danh mục', `ID: #${id}`, 'SUCCESS');
-      toast('Đã xóa danh mục thành công! 🗑️');
+      const result = await api.deleteCategory(id);
+      logActivity('Xóa/tắt danh mục', `ID: #${id}`, 'SUCCESS');
+      toast(typeof result === 'string' ? result : 'Đã xử lý danh mục thành công.');
       await syncWithBackend();
       return true;
     } catch (e) {

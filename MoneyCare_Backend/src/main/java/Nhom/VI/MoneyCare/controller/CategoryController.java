@@ -39,7 +39,9 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     public String deleteCategory(@PathVariable Long id) {
-        service.deleteCategory(id);
-        return "Xoa thanh cong!";
+        boolean deactivated = service.deleteCategory(id);
+        return deactivated
+                ? "Danh mục đang được sử dụng nên đã được tắt để giữ nguyên dữ liệu liên quan."
+                : "Xóa danh mục thành công!";
     }
 }

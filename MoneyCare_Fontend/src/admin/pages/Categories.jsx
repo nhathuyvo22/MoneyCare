@@ -66,6 +66,18 @@ export default function Categories() {
     });
   }, [categories, typeFilter, statusFilter]);
 
+  const duplicateCounts = useMemo(() => {
+    return categories.reduce((counts, category) => {
+      const key = [
+        category.userId ?? 'shared',
+        category.type,
+        (category.categoryName || '').trim().toLocaleLowerCase('vi'),
+      ].join(':');
+      counts[key] = (counts[key] || 0) + 1;
+      return counts;
+    }, {});
+  }, [categories]);
+
   const handleExportCSV = () => {
     const headers = [
       { label: 'Mã danh mục', key: 'code' },
@@ -93,8 +105,17 @@ export default function Categories() {
         <div className="flex items-center gap-2.5">
           <span className="text-xl">{c.icon || '📌'}</span>
           <span className="font-bold text-gray-900 text-xs sm:text-sm">{c.categoryName}</span>
+          {duplicateCounts[[c.userId ?? 'shared', c.type, (c.categoryName || '').trim().toLocaleLowerCase('vi')].join(':')] > 1 && (
+            <span className="badge badge-red">Trùng cùng chủ sở hữu</span>
+          )}
         </div>
       ),
+    },
+    {
+      label: 'PHẠM VI',
+      key: 'ownerName',
+      sortable: true,
+      render: (c) => <span className="text-xs text-gray-600">{c.ownerName || (c.userId ? `Người dùng #${c.userId}` : 'Dùng chung')}</span>,
     },
     {
       label: 'LOẠI',
@@ -184,7 +205,7 @@ export default function Categories() {
             Quản lý danh mục
           </h2>
           <p className="text-xs text-muted mt-0.5">
-            Cấu hình danh mục thu chi, màu sắc nhận diện và icon hệ thống.
+            Danh mục cùng tên có thể thuộc người dùng khác nhau; phạm vi được hiển thị để phân biệt.
           </p>
         </div>
 
@@ -412,8 +433,8 @@ export default function Categories() {
             <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs">
               <AlertTriangle size={18} className="text-rose-600 flex-shrink-0 mt-0.5" />
               <div>
-                Bạn có chắc chắn muốn xóa vĩnh viễn danh mục{' '}
-                <strong>{showDeleteConfirm.categoryName}</strong>? Các giao dịch thuộc danh mục này có thể bị ảnh hưởng!
+                Bạn có chắc chắn muốn xử lý danh mục{' '}
+                <strong>{showDeleteConfirm.categoryName}</strong>? Nếu danh mục đang được giao dịch, ngân sách hoặc mục khác sử dụng, hệ thống sẽ tắt danh mục thay vì xóa để giữ nguyên dữ liệu.
               </div>
             </div>
 
@@ -422,7 +443,7 @@ export default function Categories() {
                 Hủy bỏ
               </button>
               <button onClick={handleConfirmDelete} className="btn-danger text-xs">
-                Xóa vĩnh viễn
+                Xóa hoặc tắt danh mục
               </button>
             </div>
           </div>

@@ -1,45 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, Loader } from 'lucide-react';
-
-const CATS_EXPENSE = [
-  { id: 2,  name: 'Ăn uống',   emoji: '🍜' },
-  { id: 3,  name: 'Mua sắm',   emoji: '🛒' },
-  { id: 4,  name: 'Giải trí',  emoji: '🎬' },
-  { id: 5,  name: 'Di chuyển', emoji: '🚗' },
-  { id: 6,  name: 'Hóa đơn',   emoji: '🧾' },
-  { id: 7,  name: 'Sức khỏe',  emoji: '❤️' },
-  { id: 8,  name: 'Học tập',   emoji: '📚' },
-  { id: 9,  name: 'Khác',      emoji: '📌' },
-];
-const CATS_INCOME = [
-  { id: 1,  name: 'Lương',      emoji: '💼' },
-  { id: 10, name: 'Thưởng',     emoji: '🎁' },
-  { id: 11, name: 'Đầu tư',     emoji: '📈' },
-  { id: 12, name: 'Khác',       emoji: '💰' },
-];
 
 const QUICK_AMOUNTS = [50000, 100000, 200000, 500000, 1000000, 2000000];
 
 export default function AddTransactionModal({ onClose }) {
-  const { accounts, addTransaction, loading, fmt } = useApp();
+  const { accounts, categories, addTransaction, loading, fmt } = useApp();
 
   const [type,      setType]      = useState('EXPENSE');
   const [amount,    setAmount]    = useState('');
-  const [catId,     setCatId]     = useState(CATS_EXPENSE[0].id);
+  const [catId,     setCatId]     = useState('');
   const [accountId, setAccountId] = useState(accounts[0]?.id || '');
   const [destAccId, setDestAccId] = useState('');
   const [note,      setNote]      = useState('');
   const [date,      setDate]      = useState(new Date().toISOString().split('T')[0]);
   const [errors,    setErrors]    = useState({});
 
-  const cats = type === 'INCOME' ? CATS_INCOME : CATS_EXPENSE;
+  const cats = categories.filter(category => {
+    const categoryType = String(category.type || category.categoryType || '').toUpperCase();
+    const isSelectedType = type === 'INCOME'
+      ? categoryType === 'INCOME' || categoryType === 'THU'
+      : categoryType === 'EXPENSE' || categoryType === 'CHI';
+    return isSelectedType && (!category.status || category.status === 'ACTIVE');
+  });
+
+  useEffect(() => {
+    if (!cats.some(category => String(category.id) === String(catId))) {
+      setCatId(cats[0]?.id ?? '');
+    }
+  }, [cats, catId]);
 
   const validate = () => {
     const e = {};
     const num = parseFloat(amount.replace(/\D/g, ''));
     if (!num || num <= 0) e.amount = 'Vui lòng nhập số tiền hợp lệ (> 0)';
     if (!accountId)        e.account = 'Vui lòng chọn tài khoản';
+    if (type !== 'CHUYEN_TIEN' && !cats.some(category => String(category.id) === String(catId))) {
+      e.category = 'Vui lòng chọn danh mục phù hợp';
+    }
     if (type === 'CHUYEN_TIEN' && !destAccId) e.dest = 'Vui lòng chọn tài khoản đích';
     if (type === 'CHUYEN_TIEN' && destAccId === String(accountId)) e.dest = 'Tài khoản đích phải khác tài khoản nguồn';
     setErrors(e);
@@ -56,7 +54,7 @@ export default function AddTransactionModal({ onClose }) {
       categoryId:      type === 'CHUYEN_TIEN' ? null : catId,
       type,
       amount: num,
-      title: note || (cats.find(c => c.id === catId)?.name ?? 'Giao dịch'),
+      title: note || (cats.find(c => String(c.id) === String(catId))?.categoryName ?? 'Giao dịch'),
       description: note,
       transactionDate: `${date}T${new Date().toTimeString().slice(0,5)}:00`,
     });
@@ -93,7 +91,7 @@ export default function AddTransactionModal({ onClose }) {
               ].map(({ v, label, cls }) => (
                 <button key={v} type="button"
                   className={`type-btn${type === v ? ' ' + cls : ''}`}
-                  onClick={() => { setType(v); setCatId(v === 'INCOME' ? CATS_INCOME[0].id : CATS_EXPENSE[0].id); }}
+                  onClick={() => setType(v)}
                 >
                   {label}
                 </button>
@@ -133,14 +131,18 @@ export default function AddTransactionModal({ onClose }) {
                 <div className="cat-grid">
                   {cats.map(c => (
                     <button key={c.id} type="button"
-                      className={`cat-btn${catId === c.id ? ' selected' : ''}`}
+                      className={`cat-btn${String(catId) === String(c.id) ? ' selected' : ''}`}
                       onClick={() => setCatId(c.id)}
                     >
-                      <span style={{ fontSize: '1.2rem' }}>{c.emoji}</span>
-                      <span>{c.name}</span>
+                      <span style={{ fontSize: '1.2rem' }}>{c.emoji || '🏷️'}</span>
+                      <span>{c.categoryName}</span>
                     </button>
                   ))}
+                  {cats.length === 0 && (
+                    <div className="form-error">Chưa có danh mục cho loại giao dịch này.</div>
+                  )}
                 </div>
+                {errors.category && <div className="form-error">{errors.category}</div>}
               </div>
             )}
 

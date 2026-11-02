@@ -1,6 +1,7 @@
 package Nhom.VI.MoneyCare.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
@@ -19,9 +20,11 @@ public class Bill implements UserOwnedEntity {
     private Long userId;
 
     @Column(name="ten_hoa_don", nullable=false, length=120)
+    @JsonAlias("billName")
     private String name;
 
     @Column(name="so_tien_du_kien", nullable=false, precision=19, scale=2)
+    @JsonAlias("amount")
     private BigDecimal expectedAmount;
 
     @Column(name="ngay_phat_sinh", nullable=false)

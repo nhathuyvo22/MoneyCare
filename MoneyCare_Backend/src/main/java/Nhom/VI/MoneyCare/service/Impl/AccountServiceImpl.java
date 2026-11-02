@@ -89,7 +89,15 @@ public class AccountServiceImpl implements AccountService {
         }
         if (newData.getCurrency() != null) existing.setCurrency(newData.getCurrency());
         if (newData.getDescription() != null) existing.setDescription(newData.getDescription());
-        if (newData.getBalance() != null) existing.setBalance(newData.getBalance());
+        if (newData.getBalance() != null && currentUserService.isAdmin()) {
+            existing.setBalance(newData.getBalance());
+        }
+        if (newData.getStatus() != null && currentUserService.isAdmin()) {
+            if (!"ACTIVE".equals(newData.getStatus()) && !"SUSPENDED".equals(newData.getStatus())) {
+                throw new BadRequestException("Trang thai tai khoan khong hop le");
+            }
+            existing.setStatus(newData.getStatus());
+        }
         return accountRepository.save(existing);
     }
 

@@ -190,24 +190,39 @@ public class TransactionServiceImpl implements TransactionService {
         Long userId = existing.getUserId();
         Account source = accountRepository.findById(existing.getAccountId())
                 .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
-                .orElse(null);
-        if (source != null) {
-            if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
-                source.adjustBalance(existing.getAmount());
-                if (existing.getTargetAccountId() != null) {
-                    Account target = accountRepository.findById(existing.getTargetAccountId())
-                            .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
-                            .orElse(null);
-                    if (target != null) {
-                        target.adjustBalance(existing.getAmount().negate());
-                        accountRepository.save(target);
-                    }
-                }
-            } else {
-                source.adjustBalance(existing.getSignedAmount().negate());
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.CONFLICT, "Khong tim thay tai khoan cua giao dich"));
+
+        Account target = null;
+        if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
+            if (existing.getTargetAccountId() == null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Giao dich chuyen tien thieu tai khoan dich");
             }
-            accountRepository.save(source);
+            target = accountRepository.findById(existing.getTargetAccountId())
+                    .filter(a -> currentUserService.isAdmin() || a.getUserId().equals(userId))
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.CONFLICT, "Khong tim thay tai khoan dich cua giao dich"));
+            if (target.getBalance().compareTo(existing.getAmount()) < 0) {
+                throw new BadRequestException(
+                        "Khong the xoa giao dich chuyen tien: so du tai khoan dich khong du de hoan tac");
+            }
+        } else if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.INCOME
+                && source.getBalance().compareTo(existing.getAmount()) < 0) {
+            throw new BadRequestException(
+                    "Khong the xoa giao dich thu: so du tai khoan khong du de hoan tac. "
+                            + "Hay dieu chinh so du hoac giao dich truoc.");
         }
+
+        if (target != null) {
+            target.adjustBalance(existing.getAmount().negate());
+            accountRepository.save(target);
+        }
+        if (existing.getType() == Nhom.VI.MoneyCare.entity.CategoryType.CHUYEN_TIEN) {
+            source.adjustBalance(existing.getAmount());
+        } else {
+            source.adjustBalance(existing.getSignedAmount().negate());
+        }
+        accountRepository.save(source);
         transactionRepository.delete(existing);
     }
 

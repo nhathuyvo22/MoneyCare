@@ -59,6 +59,8 @@ export default function Users() {
       fullName: showEditModal.fullName,
       email: showEditModal.email,
       phone: showEditModal.phone,
+      birthDate: showEditModal.birthDate,
+      gender: showEditModal.gender,
       roleId: showEditModal.role === 'ADMIN' ? 1 : 2,
       status: showEditModal.status,
     };

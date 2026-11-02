@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS MucTieuTietKiem (
   id_nguoi_dung BIGINT NOT NULL,
   ten_muc_tieu VARCHAR(120) NOT NULL,
   so_tien_muc_tieu DECIMAL(19,2) NOT NULL,
+  tien_lai_da_cong DECIMAL(19,2) NOT NULL DEFAULT 0,
   ngay_bat_dau DATE NOT NULL,
   ngay_muc_tieu DATE NULL,
   mo_ta VARCHAR(500),

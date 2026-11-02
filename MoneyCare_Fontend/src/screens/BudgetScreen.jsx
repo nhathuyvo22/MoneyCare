@@ -18,7 +18,10 @@ export default function BudgetScreen() {
       .filter(t => {
         const isExpense = txType(t.type) === 'expense';
         const matchesCategory = b.categoryId ? Number(t.categoryId) === Number(b.categoryId) : true;
-        return isExpense && matchesCategory;
+        const transactionDate = String(t.transactionDate || '').slice(0, 10);
+        const matchesPeriod = (!b.startDate || transactionDate >= b.startDate)
+          && (!b.endDate || transactionDate <= b.endDate);
+        return isExpense && matchesCategory && matchesPeriod;
       })
       .reduce((s, t) => s + (Number(t.amount) || 0), 0);
     const pct = limit ? Math.min(100, Math.round((spent / limit) * 100)) : 0;
@@ -29,7 +32,7 @@ export default function BudgetScreen() {
   const totalBudget = budgets.reduce((s, b) => s + (b.amount || b.limitAmount || 0), 0);
   const totalSpent  = budgetWithSpent.reduce((s, b) => s + b.spent, 0);
 
-  const expCats = categories.filter(c => c.type === 'EXPENSE');
+  const expCats = categories.filter(c => ['EXPENSE', 'CHI'].includes(String(c.type || c.categoryType || '').toUpperCase()));
 
   const validate = () => {
     const e = {};

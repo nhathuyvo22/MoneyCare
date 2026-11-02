@@ -5,6 +5,7 @@ import Nhom.VI.MoneyCare.entity.User;
 import Nhom.VI.MoneyCare.exception.BadRequestException;
 import Nhom.VI.MoneyCare.repository.UserRepository;
 import Nhom.VI.MoneyCare.repository.RoleRepository;
+import Nhom.VI.MoneyCare.security.CurrentUserService;
 import Nhom.VI.MoneyCare.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
@@ -22,11 +23,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentUserService currentUserService;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            CurrentUserService currentUserService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -48,7 +53,8 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Email da ton tai!");
         }
         user.setId(null); // dam bao luon tao moi, JPA se tu sinh id (AUTO_INCREMENT)
-        // Dang ky cong khai luon duoc gan USER; khong tin roleId/status do client gui len.
+        // Dang ky cong khai luon duoc gan USER; khong tin roleId/status do client gui
+        // len.
         user.setRoleId(roleRepository.findByName("USER")
                 .orElseThrow(() -> new BadRequestException("Chua cau hinh vai tro USER")).getId());
         user.setStatus("ACTIVE");
@@ -70,10 +76,14 @@ public class UserServiceImpl implements UserService {
         existing.setBirthDate(newData.getBirthDate());
         existing.setGender(newData.getGender());
         if (newData.getRoleId() != null) {
-            if (roleRepository.findById(newData.getRoleId()).isEmpty()) throw new BadRequestException("Vai tro khong ton tai");
+            if (roleRepository.findById(newData.getRoleId()).isEmpty())
+                throw new BadRequestException("Vai tro khong ton tai");
             existing.setRoleId(newData.getRoleId());
         }
-        if (newData.getStatus() != null) existing.setStatus(newData.getStatus());
+        if (newData.getStatus() != null) {
+            preventLockingCurrentUser(existing, newData.getStatus());
+            existing.setStatus(newData.getStatus());
+        }
         existing.setAvatar(newData.getAvatar());
         existing.setUpdatedAt(LocalDateTime.now());
         return userRepository.save(existing); // save() CO id -> Hibernate sinh UPDATE
@@ -100,7 +110,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void recordLogout(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
-            // Dua last_seen_at ve 3 phut truoc de he thong nhan dien ngay la OFFLINE (> 2 phut)
+            // Dua last_seen_at ve 3 phut truoc de he thong nhan dien ngay la OFFLINE (> 2
+            // phut)
             user.setLastSeenAt(LocalDateTime.now().minusMinutes(3));
             userRepository.save(user);
         });
@@ -108,15 +119,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUserStatus(Long id, String status) {
-        if (status == null || status.isBlank()) {
-            throw new BadRequestException("Trang thai khong hop le");
+        if (status == null || !List.of("ACTIVE", "LOCKED").contains(status.trim().toUpperCase())) {
+            throw new BadRequestException("Trang thai tai khoan khong hop le");
         }
-        String norm = status.trim().toUpperCase();
-        if (!List.of("ACTIVE", "LOCKED", "PENDING").contains(norm)) {
-            throw new BadRequestException("Trang thai khong hop le: " + status);
-        }
+        String normalizedStatus = status.trim().toUpperCase();
+
         User existing = getUserById(id);
-        existing.setStatus(norm);
+        preventLockingCurrentUser(existing, normalizedStatus);
+        existing.setStatus(normalizedStatus);
         existing.setUpdatedAt(LocalDateTime.now());
         return userRepository.save(existing);
     }
@@ -136,6 +146,12 @@ public class UserServiceImpl implements UserService {
         }
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             throw new BadRequestException("Email khong hop le");
+        }
+    }
+
+    private void preventLockingCurrentUser(User target, String status) {
+        if (!"ACTIVE".equals(status) && target.getId().equals(currentUserService.getUserId())) {
+            throw new BadRequestException("Khong the khoa tai khoan quan tri dang dang nhap");
         }
     }
 }

@@ -30,6 +30,10 @@ public class SavingsGoal implements UserOwnedEntity {
     @JsonAlias({"soTienMucTieu"})
     private BigDecimal targetAmount;
 
+    @Column(name="tien_lai_da_cong", nullable=false, precision=19, scale=2, updatable=false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private BigDecimal interestCredited = BigDecimal.ZERO;
+
     @Column(name="ngay_bat_dau", nullable=false)
     @JsonProperty("startDate")
     @JsonAlias({"ngayBatDau"})
@@ -70,6 +74,9 @@ public class SavingsGoal implements UserOwnedEntity {
     public void prePersist() {
         if (this.startDate == null) {
             this.startDate = LocalDate.now();
+        }
+        if (this.interestCredited == null) {
+            this.interestCredited = BigDecimal.ZERO;
         }
         if (this.status == null || this.status.isEmpty()) {
             this.status = "ACTIVE";

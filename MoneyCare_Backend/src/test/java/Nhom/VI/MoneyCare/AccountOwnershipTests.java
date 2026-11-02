@@ -12,7 +12,6 @@ import Nhom.VI.MoneyCare.security.CurrentUserService;
 import Nhom.VI.MoneyCare.service.Impl.AccountServiceImpl;
 import java.math.BigDecimal;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,13 +25,10 @@ class AccountOwnershipTests {
     @Mock private CurrentUserService currentUserService;
     @InjectMocks private AccountServiceImpl accountService;
 
-    @BeforeEach
-    void setAuthenticatedUser() {
-        when(currentUserService.getUserId()).thenReturn(5L);
-    }
-
     @Test
     void createAccountUsesAuthenticatedOwnerInsteadOfRequestUserId() {
+        when(currentUserService.getUserId()).thenReturn(5L);
+
         Account request = new Account();
         request.setUserId(99L);
         request.setAccountName("Main");
@@ -48,6 +44,8 @@ class AccountOwnershipTests {
 
     @Test
     void updateDoesNotAllowChangingBalanceOpeningBalanceOrStatus() {
+        when(currentUserService.getUserId()).thenReturn(5L);
+
         Account existing = new Account();
         existing.setId(10L);
         existing.setUserId(5L);
@@ -70,5 +68,27 @@ class AccountOwnershipTests {
         assertEquals(new BigDecimal("100.00"), updated.getOpeningBalance());
         assertEquals("ACTIVE", updated.getStatus());
         assertEquals("Renamed", updated.getAccountName());
+    }
+
+    @Test
+    void adminCanChangeAccountStatus() {
+        Account existing = new Account();
+        existing.setId(10L);
+        existing.setUserId(5L);
+        existing.setAccountName("Main");
+        existing.setStatus("ACTIVE");
+
+        Account request = new Account();
+        request.setAccountName("Main");
+        request.setStatus("SUSPENDED");
+
+        when(currentUserService.isAdmin()).thenReturn(true);
+        when(accountRepository.findById(10L)).thenReturn(Optional.of(existing));
+        when(accountRepository.save(existing)).thenReturn(existing);
+
+        Account updated = accountService.updateAccount(10L, request);
+
+        assertEquals("SUSPENDED", updated.getStatus());
+        verify(accountRepository).save(existing);
     }
 }

@@ -39,8 +39,7 @@ public class UserController {
         User user = service.getUserById(id);
         EntityModel<User> model = EntityModel.of(user,
                 linkTo(methodOn(UserController.class).getUserById(id)).withSelfRel(),
-                linkTo(methodOn(UserController.class).getAllUsers()).withRel("all-users")
-        );
+                linkTo(methodOn(UserController.class).getAllUsers()).withRel("all-users"));
         return ResponseEntity.ok(model);
     }
 
@@ -56,8 +55,10 @@ public class UserController {
         return service.updateUser(id, user);
     }
 
-    // Heartbeat cap nhat trang thai online (POST) - http://localhost:8080/api/users/heartbeat
+    // Heartbeat cap nhat trang thai online (POST) -
+    // http://localhost:8080/api/users/heartbeat
     @PostMapping("/heartbeat")
+
     public Map<String, Object> heartbeat(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             service.updateHeartbeat(authentication.getName());
@@ -67,9 +68,8 @@ public class UserController {
 
     // Cap nhat rieng trang thai tai khoan (PATCH) - http://localhost:8080/api/users/{id}/status
     @PatchMapping("/{id}/status")
-    public User updateUserStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        String status = body != null ? body.get("status") : null;
-        return service.updateUserStatus(id, status);
+    public User updateUserStatus(@PathVariable Long id, @RequestBody UserStatusRequest request) {
+        return service.updateUserStatus(id, request.status());
     }
 
     // Xoa (DELETE) - http://localhost:8080/api/users/{id}
@@ -77,5 +77,8 @@ public class UserController {
     public String deleteUser(@PathVariable Long id) {
         service.deleteUser(id);
         return "Xoa thanh cong!";
+    }
+
+    public record UserStatusRequest(String status) {
     }
 }

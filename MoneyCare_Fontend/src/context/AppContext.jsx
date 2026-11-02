@@ -245,7 +245,7 @@ export function AppProvider({ children }) {
       ]);
       if (accs.status === 'fulfilled' && Array.isArray(accs.value)) setAccounts(accs.value);
       if (txs.status === 'fulfilled' && Array.isArray(txs.value)) setTransactions(txs.value);
-      if (cats.status === 'fulfilled' && Array.isArray(cats.value) && cats.value.length > 0) setCategories(cats.value);
+      if (cats.status === 'fulfilled' && Array.isArray(cats.value)) setCategories(cats.value);
       if (buds.status === 'fulfilled' && Array.isArray(buds.value)) setBudgets(buds.value);
       if (goals.status === 'fulfilled' && Array.isArray(goals.value)) {
         const savingsTxList = (stxs.status === 'fulfilled' && Array.isArray(stxs.value)) ? stxs.value : [];
@@ -300,6 +300,16 @@ export function AppProvider({ children }) {
       setUser(res.user);
       setIsLive(true);
       setBackendUp(true);
+      const adminRoles = res.user?.authorities || [];
+      const loginIsAdmin = Number(res.user?.roleId) === 1
+        || adminRoles.includes('ROLE_ADMIN')
+        || adminRoles.includes('ADMIN');
+      const loginMode = loginIsAdmin ? 'admin' : 'user';
+      localStorage.setItem('mc_app_mode', loginMode);
+      setAppModeRaw(loginMode);
+      if (loginIsAdmin) {
+        localStorage.setItem('mc_admin_screen', 'dashboard');
+      }
 
       // Đồng bộ dữ liệu tài khoản từ backend
       await syncAll();
@@ -574,29 +584,43 @@ export function AppProvider({ children }) {
         setBills(prev => [...prev, { ...data, id: Date.now(), status: 'PENDING' }]);
       }
       toast('Đã thêm hóa đơn!');
+      return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
+      return false;
     }
   }, [isLive, token]);
 
   // ── pay bill ──
-  const payBill = useCallback(async (bill) => {
+  const payBill = useCallback(async (bill, accountId) => {
+    setLoad('billPayment', true);
     try {
       const amt = Number(bill.amount || bill.expectedAmount) || 0;
       if (isLive && token) {
-        await api.createBillPayment({ billId: bill.id, amount: amt, paymentDate: new Date().toISOString() });
+        await api.createBillPayment({ billId: bill.id, accountId, amount: amt, paymentDate: new Date().toISOString() });
         await syncAll();
       } else {
+        const account = accounts.find(item => item.id === accountId);
+        if (!account || account.balance < amt) {
+          throw new Error('Tài khoản không tồn tại hoặc số dư không đủ để thanh toán.');
+        }
+        setAccounts(prev => prev.map(item =>
+          item.id === accountId ? { ...item, balance: item.balance - amt } : item
+        ));
         setBills(prev => prev.map(b => b.id === bill.id ? { ...b, status: 'PAID' } : b));
       }
       const spokenAmt = formatAmountToSpokenVietnamese(amt);
       toast(`Đã thanh toán hóa đơn "${bill.name || bill.billName || 'Hóa đơn'}" thành công! 🎉`, 'success', {
         voiceText: `Tài khoản của bạn đã thanh toán thành công ${spokenAmt}.`
       });
+      return true;
     } catch (e) {
       toast('Lỗi: ' + e.message, 'error');
+      return false;
+    } finally {
+      setLoad('billPayment', false);
     }
-  }, [isLive, token, syncAll, toast]);
+  }, [accounts, isLive, token, syncAll, toast]);
 
   // ── mark notification read ──
   const markNotifRead = useCallback((id) => {
@@ -636,7 +660,7 @@ export function AppProvider({ children }) {
       markNotifRead,
       // computed
       totalNetWorth, monthlyIncome, monthlyExpense,
-      remaining: totalNetWorth + monthlyIncome - monthlyExpense,
+      remaining: totalNetWorth,
       unreadCount,
       // ui helpers
       loading, toast,

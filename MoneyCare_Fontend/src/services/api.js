@@ -32,7 +32,9 @@ async function request(endpoint, method = 'GET', body = null) {
   }
 
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
+    let msg = res.status === 423
+      ? 'Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.'
+      : `HTTP ${res.status}`;
     try {
       const err = await res.json();
       msg = err.message || err.error || msg;
@@ -70,8 +72,8 @@ export const getUsers        = ()         => request('/api/users');
 export const getUserById     = (id)       => request(`/api/users/${id}`);
 export const createUser      = (data)     => request('/api/users', 'POST', data);
 export const updateUser      = (id, data) => request(`/api/users/${id}`, 'PUT', data);
+export const updateUserStatus = (id, status) => request(`/api/users/${id}/status`, 'PATCH', { status });
 export const deleteUser      = (id)       => request(`/api/users/${id}`, 'DELETE');
-export const updateUserStatus = (id, status) => request('/api/users/' + id + '/status', 'PATCH', { status });
 export const sendHeartbeat   = ()         => request('/api/users/heartbeat', 'POST');
 
 // ── ACTIVITY LOGS ────────────────────────────────────────────────

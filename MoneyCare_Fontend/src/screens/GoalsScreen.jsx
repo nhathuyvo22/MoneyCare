@@ -22,7 +22,7 @@ export default function GoalsScreen() {
     if (!form.targetDate) err.targetDate = 'Chọn ngày mục tiêu';
     setErrors(err);
     if (Object.keys(err).length) return;
-    await addSavingsGoal({
+    const createdGoal = await addSavingsGoal({
       name: form.goalName.trim(),
       goalName: form.goalName.trim(),
       targetAmount: t,
@@ -32,6 +32,7 @@ export default function GoalsScreen() {
       description: '',
       status: 'ACTIVE',
     });
+    if (!createdGoal) return;
     setForm({ goalName: '', targetAmount: '', targetDate: '', accountId: '' });
     setShowAdd(false);
   };

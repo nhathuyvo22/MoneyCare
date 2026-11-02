@@ -1,6 +1,5 @@
 package Nhom.VI.MoneyCare;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -51,13 +50,11 @@ class CrudOwnershipTests {
     }
 
     @Test
-    void writeReplacesClientSuppliedOwnerWithAuthenticatedOwner() {
+    void writeRejectsClientSuppliedOwnerFromAnotherUser() {
         Bill bill = new Bill();
         bill.setUserId(99L);
 
-        ownershipService.prepareForWrite(bill, 5L);
-
-        assertEquals(5L, bill.getUserId());
+        assertThrows(ResponseStatusException.class, () -> ownershipService.prepareForWrite(bill, 5L));
     }
 
     @Test

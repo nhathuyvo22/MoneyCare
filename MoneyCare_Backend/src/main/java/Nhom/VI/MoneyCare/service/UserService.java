@@ -17,6 +17,8 @@ public interface UserService {
 
     User updateUser(Long id, User user);
 
+    User updateUserStatus(Long id, String status);
+
     void deleteUser(Long id);
 
     void updateHeartbeat(String email);
@@ -24,6 +26,4 @@ public interface UserService {
     void recordLogin(String email);
 
     void recordLogout(String email);
-
-    User updateUserStatus(Long id, String status);
 }
